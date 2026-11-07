@@ -49,7 +49,7 @@ document.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a||(!E&&a!=
  else if(a=='np'){const name=$('#npn').value.trim();if(!name)return;const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name,avatar:'38723936'});$('#npn').value=''}
  else if(a=='rs'){E=EDIT?load(E.id):blank();if(!EDIT)localStorage.removeItem(KEY)}
  else if(a=='ex'){const x=structuredClone(ev()),all=EDIT?D.events.map(o=>o.id===x.id?x:o):[...D.events,x];
-  download(fmt(D.users,all,D.periods));D.events=all;
+  download(fmt(D,all));D.events=all;
   if(EDIT){E=load(x.id);pickInit();$('#pick').value=x.id}else{max0=Math.max(...D.users.map(u=>u.id));E=blank();localStorage.removeItem(KEY)}}
  render();save()});
 

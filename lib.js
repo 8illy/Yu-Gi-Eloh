@@ -6,9 +6,10 @@ const CFG={
  avatar:a=>`https://images.ygoprodeck.com/images/cards_cropped/${encodeURIComponent(a)}.jpg` // avatar = YGOPRODeck card id
 };
 const RESULTS=['p1','p2','dl','bye'];
-async function loadData(base=''){const r=await fetch(base+'data/bundle.json',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
+async function loadData(base=''){const r=await fetch(base+'data/bundle.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
 // one line per user/event so git diffs stay readable
-const fmt=(u,e,p=[])=>'{"periods":[\n'+p.map(x=>JSON.stringify(x)).join(',\n')+'\n],\n"users":[\n'+u.map(x=>JSON.stringify(x)).join(',\n')+'\n],\n"events":[\n'+e.map(x=>JSON.stringify(x)).join(',\n')+'\n]}\n';
+const fmt=(d,e=d.events)=>{const L=a=>(a||[]).map(x=>JSON.stringify(x)).join(',\n');
+ return '{"periods":[\n'+L(d.periods)+'\n],\n'+(d.trophies?'"trophies":'+JSON.stringify(d.trophies,null,1)+',\n':'')+'"users":[\n'+L(d.users)+'\n],\n"events":[\n'+L(e)+'\n]}\n'};
 
 function validate(d,ev){
  const e=[],ids=new Set(d.users.map(u=>u.id)),inSt=new Set(ev.standings.map(s=>s.p));

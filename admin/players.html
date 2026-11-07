@@ -24,6 +24,6 @@ document.addEventListener('click',e=>{const a=e.target.dataset.a,pk=e.target.clo
  if(pk){const[i,id]=pk.dataset.pick.split('.');D.users[i].avatar=id;render();return}
  if(a=='add'){const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name:'',avatar:'38723936'});render()}
  else if(a&&a.startsWith('rm')){D.users[+a.slice(2)].avatar='';render()}
- else if(a=='ex')download(fmt(D.users,D.events,D.periods))});
+ else if(a=='ex')download(fmt(D))});
 loadData('../').then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
 </script></body></html>
