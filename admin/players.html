@@ -1,0 +1,29 @@
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Admin: edit players</title><link rel=stylesheet href=../style.css></head><body data-mode=players>
+<header><b>Admin</b><nav><a href="index.html">Add event</a><a href="events.html">Edit events</a><a href="players.html">Edit players</a><a href="periods.html">Periods</a><a href="../">Back to site</a></nav></header>
+<main>
+<div id=app>Loading…</div></main>
+<script src=../lib.js?v=2></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+let D;
+function render(){
+ $('#app').innerHTML=`<div class=card>${D.users.map((u,i)=>`<div class=row><img class=av src="${esc(CFG.avatar(u.avatar))}" alt="" onload="this.style.visibility=''" onerror="this.style.visibility='hidden'"><span style="width:2.5rem">#${u.id}</span><input data-k="${i}.name" value="${esc(u.name)}" placeholder=Name><input data-k="${i}.nickname" value="${esc(u.nickname||'')}" placeholder=Nickname>${u.avatar?`<button data-a="rm${i}">Remove avatar</button>`:`<input data-s="${i}" placeholder="Find card by name" autocomplete=off><div data-res="${i}" style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:.4rem"></div>`}</div>`).join('')}<button data-a=add>Add player</button></div><div class=card id=status></div>`;
+ status()}
+async function find(i,q){const box=$(`[data-res="${i}"]`);q=q.trim();if(!q){box.innerHTML='';return}
+ box.textContent='Searching…';
+ try{const j=await(await fetch('https://db.ygoprodeck.com/api/v7/cardinfo.php?fname='+encodeURIComponent(q))).json(),ex=c=>c.name.toLowerCase()==q.toLowerCase();
+  const cs=(j.data||[]).sort((a,b)=>ex(b)-ex(a)).slice(0,8);
+  box.innerHTML=cs.length?cs.map(c=>`<button data-pick="${i}.${c.id}"><img class=av src="${esc(CFG.avatar(c.id))}" alt="">${esc(c.name)}</button>`).join(''):'No card found. Try fewer words.'}
+ catch{box.textContent='Search failed. Check your connection.'}}
+function status(){const errs=D.users.filter(u=>!u.name).map(u=>'Player #'+u.id+' needs a name');
+ $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+`<div class=row><button data-a=ex ${errs.length?'disabled':''}>Export bundle.json</button></div><small>Upload the downloaded bundle.json over data/bundle.json on your server.</small>`}
+document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(t.dataset.s!=null)return find(t.dataset.s,t.value);if(!k)return;const[i,f]=k.split('.'),v=t.value.trim();
+ D.users[i][f]=f==='nickname'?(v||undefined):v;
+ status()});
+document.addEventListener('click',e=>{const a=e.target.dataset.a,pk=e.target.closest('[data-pick]');
+ if(pk){const[i,id]=pk.dataset.pick.split('.');D.users[i].avatar=id;render();return}
+ if(a=='add'){const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name:'',avatar:'38723936'});render()}
+ else if(a&&a.startsWith('rm')){D.users[+a.slice(2)].avatar='';render()}
+ else if(a=='ex')download(fmt(D.users,D.events,D.periods))});
+loadData('../').then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
+</script></body></html>
