@@ -1,7 +1,7 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Admin: ranking periods</title><link rel=stylesheet href=../style.css></head><body>
 <header><b>Admin</b><nav><a href="index.html">Add event</a><a href="events.html">Edit events</a><a href="players.html">Edit players</a><a href="periods.html">Periods</a><a href="../">Back to site</a></nav></header>
 <main><div id=app>Loading…</div></main>
-<script src=../lib.js></script>
+<script src=../lib.js></script><script src=work.js></script>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
 let D;
@@ -15,7 +15,7 @@ function errors(){const e=[],ps=D.periods;
  const s=ps.filter(p=>p.start).sort((a,b)=>a.start.localeCompare(b.start));
  for(let i=1;i<s.length;i++)if(!s[i-1].end||s[i-1].end>=s[i].start)e.push(`${periodLabel(s[i-1])} overlaps ${periodLabel(s[i])}`);
  return e}
-function status(){const errs=errors(),out=errs.length?0:D.events.filter(e=>!D.periods.some(p=>inPeriod(p,e.date))).length;
+function status(){saveWork(D);const errs=errors(),out=errs.length?0:D.events.filter(e=>!D.periods.some(p=>inPeriod(p,e.date))).length;
  $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+(out?`<div>${out} event${out>1?'s':''} fall outside every period and won't count towards any ranking.</div>`:'')+`<div class=row><button data-a=ex ${errs.length?'disabled':''}>Export bundle.json</button></div><small>Upload the downloaded bundle.json over data/bundle.json on your server.</small>`}
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(!k)return;const[i,f]=k.split('.');
  D.periods[i][f]=f==='start'?t.value:(t.value.trim()||undefined);status()});
@@ -23,5 +23,5 @@ document.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a)return;
  if(a=='add'){D.periods.push({start:''});render()}
  else if(a.startsWith('rm')){D.periods.splice(+a.slice(2),1);render()}
  else if(a=='ex'){D.periods.sort((x,y)=>x.start.localeCompare(y.start));download(fmt(D));render()}});
-loadData('../').then(d=>{D=d;D.periods??=[];render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
+loadWork().then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
 </script></body></html>

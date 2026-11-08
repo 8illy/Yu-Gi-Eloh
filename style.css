@@ -80,5 +80,36 @@ html{-webkit-text-size-adjust:100%}
 }
 @media(max-width:700px){
  .lb th:nth-child(n+6),.lb td:nth-child(n+6){display:none}
- .h2h th:nth-child(4),.h2h td:nth-child(4){display:none}
+}
+.big{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
+.panels .stats>div:first-child{margin-right:auto}
+@media(max-width:700px){
+ .panels .stats>div:first-child{flex-basis:100%}
+}
+.ds{display:none}
+@media(max-width:700px){
+ /* player links: avatar + name as a flex row so long names wrap beside the avatar */
+ .pl{display:inline-flex;align-items:center;gap:.6rem}
+ .pl .av,.pl .av.after{margin:0;flex:none}
+ .pl .nm{min-width:0;overflow-wrap:anywhere;line-height:1.2}
+ a.pl{text-decoration:none}
+ a.pl .nm{text-decoration:underline}
+ /* match history: two-line entries */
+ .mh table,.mh tbody{display:block}
+ .mh tr:first-child{display:none}
+ .mh tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"opp res" "ev date";gap:.2rem .75rem;padding:.55rem 0;border-bottom:1px solid var(--line)}
+ .mh td{display:block;border:0;padding:0;text-align:left}
+ .mh td:nth-child(1){grid-area:date;text-align:right;color:var(--mut);font-size:.8rem;align-self:end}
+ .mh td:nth-child(2){grid-area:opp}
+ .mh td:nth-child(3){grid-area:res;text-align:right;font-weight:600;align-self:center}
+ .mh td:nth-child(4){grid-area:ev;color:var(--mut);font-size:.85rem;align-self:end}
+ .mh .dl{display:none}
+ .mh .ds{display:inline}
+ /* round matches: one player per line, tick on the winner */
+ .m{grid-template-columns:minmax(0,1fr);gap:.3rem 0;padding:.5rem 0;border-bottom:1px solid var(--line);max-width:none}
+ .m>span:nth-child(2){display:none}
+ .m .l,.m .r{display:flex;align-items:center;justify-content:space-between;text-align:left}
+ .m .win::after{content:"✓";margin-left:.5rem}
+ .m .pl.pr{flex-direction:row-reverse;justify-content:flex-end}
+ .m i{padding:0}
 }
