@@ -11,7 +11,7 @@
   "byeAvatar": "39526584",
   "newPlayerAvatar": "38723936"
  },
- "trophies": {
+  "trophies": {
   "matchWinMilestones": [
    1,
    10,
@@ -27,6 +27,14 @@
    25,
    50,
    100
+  ],
+  "eloMilestones": [
+   1550,
+   1600,
+   1700,
+   1800,
+   1900,
+   2000
   ],
   "medalColors": {
    "gold": {
@@ -68,6 +76,10 @@
    "mostmatch": {
     "left": "#f08a3c",
     "right": "#c4621c"
+   },
+   "elo": {
+    "left": "#2fb8b0",
+    "right": "#1f8a84"
    }
   }
  }

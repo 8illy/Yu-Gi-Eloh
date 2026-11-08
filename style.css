@@ -82,7 +82,7 @@ html{-webkit-text-size-adjust:100%}
  .lb th:nth-child(n+6),.lb td:nth-child(n+6){display:none}
 }
 .big{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-weight:700;font-variant-numeric:lining-nums tabular-nums}
-.panels .stats>div:first-child{margin-right:auto}
+.panels .stats>.lft{margin-right:auto}
 @media(max-width:700px){
  .panels .stats>div:first-child{flex-basis:100%}
 }
@@ -115,3 +115,6 @@ html{-webkit-text-size-adjust:100%}
 .w{display:inline-flex;align-items:center;gap:.4rem}
 .w.rv{flex-direction:row-reverse}
 @media(max-width:700px){.m .w.rv{flex-direction:row}}
+.nosel{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.nosel img{-webkit-user-drag:none;user-drag:none}
+.aka{padding-left:10px}

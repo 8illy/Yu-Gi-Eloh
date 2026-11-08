@@ -68,7 +68,19 @@
    "mostmatch": {
     "left": "#f08a3c",
     "right": "#c4621c"
+   },
+   "elo": {
+    "left": "#2fb8b0",
+    "right": "#1f8a84"
    }
-  }
+  },
+  "eloMilestones": [
+   1550,
+   1600,
+   1700,
+   1800,
+   1900,
+   2000
+  ]
  }
 }

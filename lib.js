@@ -51,10 +51,10 @@ function derive(d,per=null){
    const mo={...m,event:e.id,date:e.date,round:i+1,phase:rd.phase,j};matches.push(mo);mx[`${e.id}:${i}:${j}`]=mo;
    if(m.result==='bye'){a.byes++;pt[a.id]+=CFG.pts;return}
    const h=(p,o)=>p.h2h[o]??={w:0,l:0,dl:0},ha=h(a,b.id),hb=h(b,a.id),rated=e.rated!==false;
-   if(m.result==='dl'){a.dl++;b.dl++;ha.dl++;hb.dl++;if(rated&&CFG.dl==='draw')[mo.d1,mo.d2]=upd(a,b,.5);return}
+   if(m.result==='dl'){a.dl++;b.dl++;ha.dl++;hb.dl++;if(rated&&CFG.dl==='draw')[mo.d1,mo.d2]=upd(a,b,.5);mo.r1=a.elo;mo.r2=b.elo;return}
    const[w,l,hw,hl]=m.result==='p1'?[a,b,ha,hb]:[b,a,hb,ha];
    w.w++;l.l++;hw.w++;hl.l++;pt[w.id]+=CFG.pts;
-   if(rated){const[x,y]=upd(w,l,1);if(w===a){mo.d1=x;mo.d2=y}else{mo.d1=y;mo.d2=x}}
+   if(rated){const[x,y]=upd(w,l,1);if(w===a){mo.d1=x;mo.d2=y}else{mo.d1=y;mo.d2=x}}mo.r1=a.elo;mo.r2=b.elo;
   }))});
  return{P,pts,matches,mx,events,list:Object.values(P).filter(p=>p.events).sort((a,b)=>b.elo-a.elo)};
 }
