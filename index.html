@@ -10,7 +10,7 @@ const calc=()=>{const per=PER==='all'?null:periodList(D).find(p=>p.start===PER);
  const last=S.events.at(-1);PV=last&&S.events.length>1&&!(per&&per.end&&per.end<new Date().toISOString().slice(0,10))?derive({...D,events:D.events.filter(e=>e.id!==last.id)},per):null};
 // highest rating reached in this view (the starting rating counts)
 const peak=(q,X)=>{let m=CFG.start;X.matches.forEach(x=>{const r=x.p1===q.id?x.r1:x.p2===q.id?x.r2:null;if(r!=null&&r>m)m=r});return Math.round(m)};
-const dchip=v=>{const r=Math.round(v||0);return r?` <small class=${r>0?'up':'dn'}>${r>0?'+':''}${r}</small>`:''};
+const dchip=v=>{if(v==null)return'';const r=Math.round(v);return` <small class=${r>0?'up':r<0?'dn':'zero'}>${r>=0?'+':''}${r}</small>`};
 // Elo on an event page = the ranking period the event belongs to (none if it is outside every period)
 const dc={};
 const dvFor=e=>{const has=periodList(D).length,p=has?periodFor(D,e.date):null;if(has&&!p)return null;return dc[p?p.start:'all']??=derive(D,p)};
@@ -83,7 +83,7 @@ function player(id){const p=S.P[id];if(!p)return'Unknown player';
  const h2h=Object.entries(p.h2h).sort((a,b)=>S.P[a[0]].name.localeCompare(S.P[b[0]].name)).map(([o,h])=>[pl(o),h.w,`<span title="Losses: ${h.l}, double losses: ${h.dl}">${h.l+h.dl}</span>`,pct(h.w,tot(h))]);
  const em=Object.fromEntries(D.events.map(e=>[e.id,e])),
   hist=S.matches.filter(m=>m.p1===id||m.p2===id).reverse().map(m=>{const o=m.p1===id?m.p2:m.p1,r=m.result;
-   return[fmtDate(m.date),o==null?byep():pl(o),(r==='bye'?'Bye':r==='dl'?'Double loss':(r==='p1')===(m.p1===id)?'<span class=win>Win</span>':'Loss')+dchip(m.p1===id?m.d1:m.d2),`${evl(em[m.event])} <small>round ${m.round}</small>`]});
+   return[fmtDate(m.date),o==null?byep():pl(o),(r==='bye'?'Bye':r==='dl'?'<span class=dn>Double loss</span>':(r==='p1')===(m.p1===id)?'<span class=win>Win</span>':'<span class=dn>Loss</span>')+dchip(m.p1===id?m.d1:m.d2),`${evl(em[m.event])} <small>round ${m.round}</small>`]});
  const ed={};S.matches.forEach(m=>{if(m.p1===id&&m.d1!=null)ed[m.event]=(ed[m.event]||0)+m.d1;if(m.p2===id&&m.d2!=null)ed[m.event]=(ed[m.event]||0)+m.d2});
  const evs=S.events.filter(e=>e.standings.some(s=>s.p==id)).reverse().map(e=>{const s=e.standings.find(s=>s.p==id);return[fmtDate(e.date),evl(e),s.r,S.pts[e.id][id],dchip(ed[e.id])||'–']});
  return sel()+`<div class=hero>${av(p)}<div class=who><h2><span>${esc(p.name)}${p.nickname?`<small class=aka>aka ${esc(p.nickname)}</small>`:''}</span></h2><div class=panels>${PER==='all'?'':card(p,S,0)}${card(SA.P[id],SA,1)}</div></div></div>
