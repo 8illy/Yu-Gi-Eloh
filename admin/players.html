@@ -16,14 +16,14 @@ async function find(i,q){const box=$(`[data-res="${i}"]`);q=q.trim();if(!q){box.
   box.innerHTML=cs.length?cs.map(c=>`<button data-pick="${i}.${c.id}"><img class=av src="${esc(CFG.avatar(c.id))}" alt="">${esc(c.name)}</button>`).join(''):'No card found. Try fewer words.'}
  catch{box.textContent='Search failed. Check your connection.'}}
 function status(){saveWork(D);const errs=D.users.filter(u=>!u.name).map(u=>'Player #'+u.id+' needs a name');
- $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+`<div class=row><button data-a=ex ${errs.length?'disabled':''}>Export bundle.json</button></div><small>Upload the downloaded bundle.json over data/bundle.json on your server.</small>`}
+ $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+`<div class=row><button data-a=ex ${errs.length?'disabled':''}>Export data.json</button></div><small>Upload the downloaded data.json over data/data.json on your server.</small>`}
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(t.dataset.s!=null)return find(t.dataset.s,t.value);if(!k)return;const[i,f]=k.split('.'),v=t.value.trim();
  D.users[i][f]=f==='nickname'?(v||undefined):v;
  status()});
 document.addEventListener('click',e=>{const a=e.target.dataset.a,pk=e.target.closest('[data-pick]');
  if(pk){const[i,id]=pk.dataset.pick.split('.');D.users[i].avatar=id;render();return}
- if(a=='add'){const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name:'',avatar:'38723936'});render()}
+ if(a=='add'){const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name:'',avatar:CFG.newPlayerAvatar});render()}
  else if(a&&a.startsWith('rm')){D.users[+a.slice(2)].avatar='';render()}
  else if(a=='ex')download(fmt(D))});
-loadWork().then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
+loadWork().then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/data.json ('+e.message+'). Serve the folder over HTTP.');
 </script></body></html>

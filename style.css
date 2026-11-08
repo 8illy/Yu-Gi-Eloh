@@ -86,7 +86,6 @@ html{-webkit-text-size-adjust:100%}
 @media(max-width:700px){
  .panels .stats>div:first-child{flex-basis:100%}
 }
-.ds{display:none}
 @media(max-width:700px){
  /* player links: avatar + name as a flex row so long names wrap beside the avatar */
  .pl{display:inline-flex;align-items:center;gap:.6rem}
@@ -103,8 +102,6 @@ html{-webkit-text-size-adjust:100%}
  .mh td:nth-child(2){grid-area:opp}
  .mh td:nth-child(3){grid-area:res;text-align:right;font-weight:600;align-self:center}
  .mh td:nth-child(4){grid-area:ev;color:var(--mut);font-size:.85rem;align-self:end}
- .mh .dl{display:none}
- .mh .ds{display:inline}
  /* round matches: one player per line, tick on the winner */
  .m{grid-template-columns:minmax(0,1fr);gap:.3rem 0;padding:.5rem 0;border-bottom:1px solid var(--line);max-width:none}
  .m>span:nth-child(2){display:none}
@@ -113,3 +110,8 @@ html{-webkit-text-size-adjust:100%}
  .m .pl.pr{flex-direction:row-reverse;justify-content:flex-end}
  .m i{padding:0}
 }
+.up{color:var(--win)}
+.dn{color:var(--err)}
+.w{display:inline-flex;align-items:center;gap:.4rem}
+.w.rv{flex-direction:row-reverse}
+@media(max-width:700px){.m .w.rv{flex-direction:row}}

@@ -14,7 +14,7 @@ const set=(path,val)=>{const k=path.split('.');let o=E;for(const x of k.slice(0,
 const load=id=>{const e=D.events.find(x=>x.id===id);return e?{rated:true,name:dayName(e.date),...structuredClone(e)}:null};
 
 function pickInit(){const p=$('#pick');if(!p)return;
- p.innerHTML='<option value="">Choose an event</option>'+[...D.events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<option value="${esc(e.id)}">${esc(e.date)} ${esc(evName(e))}</option>`).join('');
+ p.innerHTML='<option value="">Choose an event</option>'+[...D.events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<option value="${esc(e.id)}">${esc(fmtDate(e.date))} ${esc(evName(e))}</option>`).join('');
  p.onchange=()=>{E=load(p.value);render()}}
 
 function render(){
@@ -28,7 +28,7 @@ function render(){
 function status(){const x=ev(),errs=validate({users:D.users,events:rest()},x);let pv='';
  if(!errs.length){const per=periodFor(D,x.date),b=derive(D,per).P,a=derive({users:D.users,events:[...rest(),x]},per).P;
   pv=`<h3>Elo after this ${EDIT?'change':'event'}</h3>`+x.standings.map(s=>`<div>${esc(a[s.p].name)}: ${Math.round(b[s.p].elo)} → <b>${Math.round(a[s.p].elo)}</b></div>`).join('')}
- $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+pv+`<div class=row><button data-a=sv ${errs.length?'disabled':''}>Save event</button><button data-a=ex ${errs.length?'disabled':''}>Export bundle.json</button><button data-a=rs>${EDIT?'Discard changes':'Reset draft'}</button></div>`}
+ $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+pv+`<div class=row><button data-a=sv ${errs.length?'disabled':''}>Save event</button><button data-a=ex ${errs.length?'disabled':''}>Export data.json</button><button data-a=rs>${EDIT?'Discard changes':'Reset draft'}</button></div>`}
 
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(!k||!E)return;
  let v=t.type==='checkbox'?t.checked:t.value;
@@ -46,7 +46,7 @@ document.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a||(!E&&a!=
  else if(a.startsWith('dr'))E.rounds.splice(n[0],1);
  else if(a.startsWith('am'))E.rounds[n[0]].matches.push(m0());
  else if(a.startsWith('dm'))E.rounds[n[0]].matches.splice(n[1],1);
- else if(a=='np'){const name=$('#npn').value.trim();if(!name)return;const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name,avatar:'38723936'});$('#npn').value='';saveWork(D)}
+ else if(a=='np'){const name=$('#npn').value.trim();if(!name)return;const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name,avatar:CFG.newPlayerAvatar});$('#npn').value='';saveWork(D)}
  else if(a=='rs'){E=EDIT?load(E.id):blank();if(!EDIT)localStorage.removeItem(KEY)}
  else if(a=='ex'||a=='sv'){const x=structuredClone(ev());
   D.events=EDIT?D.events.map(o=>o.id===x.id?x:o):[...D.events,x];
@@ -74,4 +74,4 @@ document.addEventListener('keydown',e=>{if(ac.hidden||e.target!==acIn)return;
 loadWork().then(d=>{D=d;max0=Math.max(0,...d.users.map(u=>u.id));
  if(EDIT)pickInit();else{E=blank();
   try{const s=JSON.parse(localStorage.getItem(KEY));if(s){E=s.E;s.extra.forEach(u=>D.users.some(x=>x.id===u.id)||D.users.push(u))}}catch{}}
- render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
+ render()}).catch(e=>$('#app').textContent='Could not load ../data/data.json ('+e.message+'). Serve the folder over HTTP.');

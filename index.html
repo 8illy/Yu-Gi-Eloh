@@ -4,22 +4,32 @@
 <script src=lib.js?v=2></script>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
-let D,S,SA,PER;
-const calc=()=>{S=derive(D,PER==='all'?null:periodList(D).find(p=>p.start===PER))};
+let D,S,SA,PER,PV;
+const calc=()=>{const per=PER==='all'?null:periodList(D).find(p=>p.start===PER);S=derive(D,per);
+ // snapshot before the most recent event in this view, to show rank / Elo changes
+ const last=S.events.at(-1);PV=last&&S.events.length>1?derive({...D,events:D.events.filter(e=>e.id!==last.id)},per):null};
+const dchip=v=>{const r=Math.round(v||0);return r?` <small class=${r>0?'up':'dn'}>${r>0?'+':''}${r}</small>`:''};
+// Elo on an event page = the ranking period the event belongs to (none if it is outside every period)
+const dc={};
+const dvFor=e=>{const has=periodList(D).length,p=has?periodFor(D,e.date):null;if(has&&!p)return null;return dc[p?p.start:'all']??=derive(D,p)};
+const chg=(d,txt)=>d?` <small class=${d>0?'up':'dn'}>${txt}</small>`:'';
+const dRank=(id,i)=>{if(!PV)return'';const j=PV.list.findIndex(x=>x.id===id);return j<0?' <small class=up>new</small>':chg(j-i,(j>i?'▲':'▼')+Math.abs(j-i))};
+const dElo=p=>{if(!PV)return'';const q=PV.P[p.id];if(!q||!PV.list.includes(q))return'';const d=Math.round(p.elo-q.elo);return chg(d,(d>0?'+':'')+d)};
 const sel=()=>`<div class=row style="justify-content:flex-end"><label>Ranking period <select id=per><option value=all${PER==='all'?' selected':''}>All time</option>${periodList(D).map(p=>`<option value="${esc(p.start)}"${PER===p.start?' selected':''}>${esc(periodLabel(p))}</option>`).join('')}</select></label></div>`;
 const av=u=>`<img class=av src="${esc(CFG.avatar(u.avatar))}" alt="" onerror="this.style.visibility='hidden'">`;
 const pl=id=>{const p=S.P[id];return p?`<a class=pl href="#/player/${id}">${av(p)}<span class=nm>${esc(p.name)}</span></a>`:'?'};
 const plr=id=>{const p=S.P[id];return p?`<a class="pl pr" href="#/player/${id}"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</a>`:'?'};
 // A bye is shown as a normal-looking player (not a link) so layouts stay the same
-const byep=after=>{const i=av({avatar:'39526584'});return after?`<span class="pl pr"><span class=nm>Bye</span>${i.replace('class=av','class="av after"')}</span>`:`<span class=pl>${i}<span class=nm>Bye</span></span>`};
-const sd=d=>new Date(d+'T12:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});
-const wl=p=>`<span title="Losses: ${p.l}, double losses: ${p.dl}">${p.w}–${p.l+p.dl}</span>`;
+const byep=after=>{const i=av({avatar:CFG.byeAvatar});return after?`<span class="pl pr"><span class=nm>Bye</span>${i.replace('class=av','class="av after"')}</span>`:`<span class=pl>${i}<span class=nm>Bye</span></span>`};
+// wins include byes; the tooltips break the numbers down
+const wl=p=>`<span title="Wins: ${p.w}, byes: ${p.byes}">${p.w+p.byes}</span>–<span title="Losses: ${p.l}, double losses: ${p.dl}">${p.l+p.dl}</span>`;
+const wr=p=>pct(p.w+p.byes,tot(p)+p.byes);
 const pct=(w,t)=>t?Math.round(100*w/t)+'%':'–';
 const evl=e=>`<a href="#/event/${esc(e.id)}">${esc(evName(e))}</a>`;
 const tbl=(h,rows,l=1)=>`<table><tr>${h.map((x,i)=>`<th${i<l?'':' class=r'}>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((x,i)=>`<td${i<l?'':' class=r'}>${x}</td>`).join('')}</tr>`).join('')}</table>`;
 const tot=h=>h.w+h.l+h.dl;
 
-const board=()=>sel()+`<div class="card lb">${tbl(['#','Player','Elo','W–L','Win %','1st places','Events'],S.list.map((p,i)=>[i+1,pl(p.id),Math.round(p.elo),wl(p),pct(p.w,tot(p)),p.firsts,p.events]),2)}</div>`;
+const board=()=>sel()+`<div class="card lb">${tbl(['#','Player','Elo','W–L','Win %','1st places','Events'],S.list.map((p,i)=>[`${i+1}${dRank(p.id,i)}`,pl(p.id),`${Math.round(p.elo)}${dElo(p)}`,wl(p),wr(p),p.firsts,p.events]),2)}</div>`;
 
 // Trophies: all-time achievements, independent of the selected period
 let PT=[];
@@ -55,32 +65,34 @@ function medal(k,tier,g){const c=D.trophies.medalColors[tier],l=c.highlight,m=c.
   match:card(-24)+card(0)+card(24)+plate,
   event:`<path d="M37 60h26v12c0 9-5.5 15-13 15s-13-6-13-15z" fill="${t}" /><path d="M37 64c-8 0-9 10 0 12M63 64c8 0 9 10 0 12" fill=none stroke="${t}" stroke-width=3 /><rect x=47 y=87 width=6 height=7 fill="${t}" /><rect x=40 y=94 width=20 height=5 rx=2 fill="${t}" />`+plate}[k];
  return `<svg viewBox="0 0 100 134" width=100 height=134 aria-hidden=true><defs>${grad('',0,1)}${grad('r',1,0)}</defs><path d="M27 0h18l11 52H38z" fill="${r1}" /><path d="M73 0H55L44 52h18z" fill="${r2}" /><path d="M33 0l10 52M67 0L57 52" stroke="#fff" stroke-opacity=.35 stroke-width=2 fill=none />${body}${icon}<ellipse cx=36 cy=62 rx=15 ry=7 fill="#fff" opacity=.2 transform="rotate(-30 36 62)" /></svg>`}
-const trophyCard=id=>{const T=trophies(id);return T.length?`<details class=card open><summary>Trophies</summary><div class=tro>${T.map(t=>`<div class=trophy>${medal(t.k,t.tier,t.g)}<div class=tname>${esc(t.t)}</div><div class=tdate>${t.d.split('-').reverse().join('.')}</div></div>`).join('')}</div></details>`:''};
+const trophyCard=id=>{const T=trophies(id);return T.length?`<details class=card open><summary>Trophies</summary><div class=tro>${T.map(t=>`<div class=trophy>${medal(t.k,t.tier,t.g)}<div class=tname>${esc(t.t)}</div><div class=tdate>${fmtDate(t.d)}</div></div>`).join('')}</div></details>`:''};
 
 function player(id){const p=S.P[id];if(!p)return'Unknown player';
  const st=(v,k)=>`<div><b>${v}</b><small>${k}</small></div>`;
- const card=(q,X,all)=>`<div class="card stats"><div><span class=big>${Math.round(q.elo)}</span><small>${X.list.includes(q)?`${all?'All-time Elo':'Elo'}, rank ${X.list.indexOf(q)+1} of ${X.list.length}`:all?'No events yet':'No events in this period'}</small></div>${st(wl(q),'wins–losses')}${st(q.dl,'double losses')}${st(q.byes,'byes')}${st(pct(q.w,tot(q)),'win rate')}${st(q.firsts,'1st places')}${st(q.events,'events')}</div>`;
+ const card=(q,X,all)=>`<div class="card stats"><div><span class=big>${Math.round(q.elo)}</span><small>${X.list.includes(q)?`${all?'All-time Elo':'Elo'}, rank ${X.list.indexOf(q)+1} of ${X.list.length}`:all?'No events yet':'No events in this period'}</small></div>${st(wl(q),'wins–losses')}${st(q.dl,'double losses')}${st(q.byes,'byes')}${st(wr(q),'win rate')}${st(q.firsts,'1st places')}${st(q.events,'events')}</div>`;
  const h2h=Object.entries(p.h2h).sort((a,b)=>S.P[a[0]].name.localeCompare(S.P[b[0]].name)).map(([o,h])=>[pl(o),h.w,`<span title="Losses: ${h.l}, double losses: ${h.dl}">${h.l+h.dl}</span>`,pct(h.w,tot(h))]);
  const em=Object.fromEntries(D.events.map(e=>[e.id,e])),
   hist=S.matches.filter(m=>m.p1===id||m.p2===id).reverse().map(m=>{const o=m.p1===id?m.p2:m.p1,r=m.result;
-   return[`<span class=dl>${m.date}</span><span class=ds>${sd(m.date)}</span>`,o==null?byep():pl(o),r==='bye'?'Bye':r==='dl'?'Double loss':(r==='p1')===(m.p1===id)?'<span class=win>Win</span>':'Loss',`${evl(em[m.event])} <small>round ${m.round}</small>`]});
- const evs=S.events.filter(e=>e.standings.some(s=>s.p==id)).reverse().map(e=>{const s=e.standings.find(s=>s.p==id);return[e.date,evl(e),s.r,S.pts[e.id][id]]});
+   return[fmtDate(m.date),o==null?byep():pl(o),(r==='bye'?'Bye':r==='dl'?'Double loss':(r==='p1')===(m.p1===id)?'<span class=win>Win</span>':'Loss')+dchip(m.p1===id?m.d1:m.d2),`${evl(em[m.event])} <small>round ${m.round}</small>`]});
+ const evs=S.events.filter(e=>e.standings.some(s=>s.p==id)).reverse().map(e=>{const s=e.standings.find(s=>s.p==id);return[fmtDate(e.date),evl(e),s.r,S.pts[e.id][id]]});
  return sel()+`<div class=hero>${av(p)}<div class=who><h2><span>${esc(p.name)}${p.nickname?`<small style="display:block">aka ${esc(p.nickname)}</small>`:''}</span></h2><div class=panels>${PER==='all'?'':card(p,S,0)}${card(SA.P[id],SA,1)}</div></div></div>
  ${trophyCard(id)}<details class="card h2h"><summary>Head to head</summary>${tbl(['Opponent','W','L','Win %'],h2h)}</details>
  <details class=card><summary>Events</summary>${tbl(['Date','Event','Place','Pts'],evs,2)}</details>
  <details class="card mh"><summary>Match History</summary>${tbl(['Date','Opponent','Result','Event'],hist,4)}</details>`}
 
-const events=()=>`<div class=card>${tbl(['Date','Event','Players','Winner'],[...D.events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{const w=e.standings.find(s=>s.r===1);return[e.date,evl(e),e.standings.length,w?plr(w.p):'']}),2)}</div>`;
+const events=()=>`<div class=card>${tbl(['Date','Event','Players','Winner'],[...D.events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{const w=e.standings.find(s=>s.r===1);return[fmtDate(e.date),evl(e),e.standings.length,w?plr(w.p):'']}),2)}</div>`;
 
-const mr=m=>m.result==='bye'?`<span class="l win">${pl(m.p1)}</span><span>vs</span><span class=r>${byep(true)}</span>`:`<span class="l ${m.result=='p1'?'win':''}">${pl(m.p1)}</span><span>vs</span><span class="r ${m.result=='p2'?'win':''}">${plr(m.p2)}</span>${m.result=='dl'?'<i>double loss</i>':''}`;
+const mr=(m,o)=>m.result==='bye'?`<span class="l win"><span class=w>${pl(m.p1)}</span></span><span>vs</span><span class=r>${byep(true)}</span>`:`<span class="l ${m.result=='p1'?'win':''}"><span class=w>${pl(m.p1)}${dchip(o&&o.d1)}</span></span><span>vs</span><span class="r ${m.result=='p2'?'win':''}"><span class="w rv">${plr(m.p2)}${dchip(o&&o.d2)}</span></span>${m.result=='dl'?'<i>double loss</i>':''}`;
 function event(id){const e=D.events.find(e=>e.id===id);if(!e)return'Unknown event';
+ const dv=dvFor(e),ed={};
+ if(dv)dv.matches.filter(m=>m.event===e.id).forEach(m=>{if(m.d1!=null)ed[m.p1]=(ed[m.p1]||0)+m.d1;if(m.d2!=null)ed[m.p2]=(ed[m.p2]||0)+m.d2});
  const st=(v,k)=>`<div><b>${v}</b><small>${k}</small></div>`;
- return `<div class=card><h2>${esc(evName(e))}${e.rated===false?'<small>unrated</small>':''}</h2><div class=stats>${st(e.standings.length,'players')}${st(e.rounds.length,'rounds')}${st(new Date(e.date+'T12:00').toLocaleDateString(undefined,{dateStyle:'long'}),'date')}${st(periodFor(D,e.date)?periodLabel(periodFor(D,e.date)):'None','ranking period')}</div></div><div class=card><h3>Final standings</h3>${tbl(['#','Player','Pts'],[...e.standings].sort((a,b)=>a.r-b.r).map(s=>[s.r,pl(s.p),SA.pts[e.id][s.p]]),2)}</div>`+
- e.rounds.map((rd,i)=>`<details class=card><summary>Round ${i+1} <small>${esc(rd.phase||'')}</small></summary>${rd.matches.map(m=>`<div class=m>${mr(m)}</div>`).join('')}</details>`).join('')}
+ return `<div class=card><h2>${esc(evName(e))}${e.rated===false?'<small>unrated</small>':''}</h2><div class=stats>${st(e.standings.length,'players')}${st(e.rounds.length,'rounds')}${st(fmtDate(e.date),'date')}${st(periodFor(D,e.date)?periodLabel(periodFor(D,e.date)):'None','ranking period')}</div></div><div class=card><h3>Final standings</h3>${tbl(['#','Player','Pts','Elo'],[...e.standings].sort((a,b)=>a.r-b.r).map(s=>[s.r,pl(s.p),SA.pts[e.id][s.p],dv?dchip(ed[s.p])||'–':'']),2)}</div>`+
+ e.rounds.map((rd,i)=>`<details class=card><summary>Round ${i+1} <small>${esc(rd.phase||'')}</small></summary>${rd.matches.map((m,j)=>`<div class=m>${mr(m,dv&&dv.mx[`${e.id}:${i}:${j}`])}</div>`).join('')}</details>`).join('')}
 
 function view(){const[,pg,id]=location.hash.split('/');
  $('#app').innerHTML=pg==='player'?player(+id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():board();scrollTo(0,0)}
-loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load data/bundle.json ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
+loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load data/data.json ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
 document.addEventListener('change',e=>{if(e.target.id==='per'){const o=[...document.querySelectorAll('#app details')].map(d=>d.open);PER=e.target.value;calc();view();document.querySelectorAll('#app details').forEach((d,i)=>d.open=!!o[i])}});
 </script></body></html>

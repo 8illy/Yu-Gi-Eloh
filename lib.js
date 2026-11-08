@@ -1,15 +1,22 @@
 // Shared by the public site and /admin. All stats are derived from the data; nothing is stored.
-const CFG={
- start:1500,pts:3, // points per win (a bye counts as a win, a loss or double loss is 0)
- K:32,kNew:48,newN:10, // players with <= newN rated games use the higher kNew
- dl:'draw', // double loss in Elo: 'skip' (no change) or 'draw' (counts as 0.5 each)
- avatar:a=>`https://images.ygoprodeck.com/images/cards_cropped/${encodeURIComponent(a)}.jpg` // avatar = YGOPRODeck card id
-};
+// Built-in fallbacks only. The real values live in data/config.json -> settings (see applySettings).
+const CFG={start:1500,pts:3,K:32,kNew:48,newN:10,dl:'draw',byeAvatar:'39526584',newPlayerAvatar:'38723936',avatar:a=>`https://images.ygoprodeck.com/images/cards_cropped/${encodeURIComponent(a)}.jpg`};
+// Copies config.json settings into CFG
+function applySettings(s={}){
+ const m={startRating:'start',winPoints:'pts',kFactor:'K',kFactorProvisional:'kNew',provisionalMatches:'newN',doubleLoss:'dl',byeAvatar:'byeAvatar',newPlayerAvatar:'newPlayerAvatar'};
+ for(const k in m)if(s[k]!=null)CFG[m[k]]=s[k];
+ if(s.avatarUrl)CFG.avatar=a=>s.avatarUrl.replace('{id}',encodeURIComponent(a));
+}
 const RESULTS=['p1','p2','dl','bye'];
-async function loadData(base=''){const r=await fetch(base+'data/bundle.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);return r.json()}
+// Where the files live. Point DATA_URL at another host (a full https URL) to move the data elsewhere.
+const DATA_URL='data/data.json',CONFIG_URL='data/config.json';
+const fetchText=async(base,url)=>{const r=await fetch((/^https?:/.test(url)?'':base)+url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(url+': HTTP '+r.status);return r.text()};
+const loadConfig=async base=>{let c={};try{c=JSON.parse(await fetchText(base,CONFIG_URL))}catch{}applySettings(c.settings);return c};
+async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return{...c,...JSON.parse(d)}}
 // one line per user/event so git diffs stay readable
+// Serialises ONLY the data file (periods, users, events); config.json is never written by the admin pages.
 const fmt=(d,e=d.events)=>{const L=a=>(a||[]).map(x=>JSON.stringify(x)).join(',\n');
- return '{"periods":[\n'+L(d.periods)+'\n],\n'+(d.trophies?'"trophies":'+JSON.stringify(d.trophies,null,1)+',\n':'')+'"users":[\n'+L(d.users)+'\n],\n"events":[\n'+L(e)+'\n]}\n'};
+ return '{"periods":[\n'+L(d.periods)+'\n],\n"users":[\n'+L(d.users)+'\n],\n"events":[\n'+L(e)+'\n]}\n'};
 
 function validate(d,ev){
  const e=[],ids=new Set(d.users.map(u=>u.id)),inSt=new Set(ev.standings.map(s=>s.p));
@@ -32,31 +39,41 @@ function validate(d,ev){
 }
 
 function derive(d,per=null){
- const pts={},events=d.events.filter(e=>inPeriod(per,e.date)).sort((a,b)=>a.date.localeCompare(b.date)),P={},matches=[];
+ const pts={},mx={},events=d.events.filter(e=>inPeriod(per,e.date)).sort((a,b)=>a.date.localeCompare(b.date)),P={},matches=[];
  d.users.forEach(u=>P[u.id]={...u,elo:CFG.start,n:0,w:0,l:0,dl:0,byes:0,events:0,firsts:0,h2h:{}});
  const K=p=>p.n<CFG.newN?CFG.kNew:CFG.K;
- const upd=(a,b,sa)=>{const ex=1/(1+10**((b.elo-a.elo)/400)),ka=K(a),kb=K(b);a.elo+=ka*(sa-ex);b.elo-=kb*(sa-ex);a.n++;b.n++};
+ const upd=(a,b,sa)=>{const ex=1/(1+10**((b.elo-a.elo)/400)),da=K(a)*(sa-ex),db=-K(b)*(sa-ex);a.elo+=da;b.elo+=db;a.n++;b.n++;return[da,db]};
  events.forEach(e=>{
   const pt=pts[e.id]={};
   e.standings.forEach(s=>{const p=P[s.p];p.events++;pt[s.p]=0;if(s.r===1)p.firsts++});
-  e.rounds.forEach((rd,i)=>rd.matches.forEach(m=>{
+  e.rounds.forEach((rd,i)=>rd.matches.forEach((m,j)=>{
    const a=P[m.p1],b=P[m.p2];
-   matches.push({...m,event:e.id,date:e.date,round:i+1,phase:rd.phase});
+   const mo={...m,event:e.id,date:e.date,round:i+1,phase:rd.phase,j};matches.push(mo);mx[`${e.id}:${i}:${j}`]=mo;
    if(m.result==='bye'){a.byes++;pt[a.id]+=CFG.pts;return}
    const h=(p,o)=>p.h2h[o]??={w:0,l:0,dl:0},ha=h(a,b.id),hb=h(b,a.id),rated=e.rated!==false;
-   if(m.result==='dl'){a.dl++;b.dl++;ha.dl++;hb.dl++;if(rated&&CFG.dl==='draw')upd(a,b,.5);return}
+   if(m.result==='dl'){a.dl++;b.dl++;ha.dl++;hb.dl++;if(rated&&CFG.dl==='draw')[mo.d1,mo.d2]=upd(a,b,.5);return}
    const[w,l,hw,hl]=m.result==='p1'?[a,b,ha,hb]:[b,a,hb,ha];
    w.w++;l.l++;hw.w++;hl.l++;pt[w.id]+=CFG.pts;
-   if(rated)upd(w,l,1);
+   if(rated){const[x,y]=upd(w,l,1);if(w===a){mo.d1=x;mo.d2=y}else{mo.d1=y;mo.d2=x}}
   }))});
- return{P,pts,matches,events,list:Object.values(P).filter(p=>p.events).sort((a,b)=>b.elo-a.elo)};
+ return{P,pts,matches,mx,events,list:Object.values(P).filter(p=>p.events).sort((a,b)=>b.elo-a.elo)};
 }
-function download(txt){const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));l.download='bundle.json';l.click()}
+function download(txt,name='data.json'){const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));l.download=name;l.click()}
 // Ranking periods: {start, end?, name?}; no end = ongoing. per=null means all time.
 const inPeriod=(p,date)=>!p||(date>=p.start&&(!p.end||date<=p.end));
-const periodLabel=p=>p.name||`${p.start} to ${p.end||'present'}`;
+const periodLabel=p=>p.name||`${fmtDate(p.start)} to ${p.end?fmtDate(p.end):'present'}`;
 const periodList=d=>[...(d.periods||[])].sort((a,b)=>b.start.localeCompare(a.start));
 const periodFor=(d,date)=>periodList(d).find(p=>inPeriod(p,date))||null;
 // Default event name from the date, e.g. "Friday Night Locals"
 const dayName=date=>new Date(date+'T12:00').toLocaleDateString('en-GB',{weekday:'long'})+' Night Locals';
 const evName=e=>e.name||dayName(e.date);
+
+// Date display. Pattern comes from bundle.json settings.dateFormat (default "D MMM YY" -> 6 Nov 26).
+// Tokens: YYYY YY MMMM MMM MM M DD D
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmtDate(iso,pat){
+ const f=pat||(typeof D!=='undefined'&&D&&D.settings&&D.settings.dateFormat)||'D MMM YY';
+ const[y,m,d]=iso.split('-').map(Number),M=MONTHS[m-1];
+ const t={YYYY:y,YY:String(y).slice(2),MMMM:M,MMM:M.slice(0,3),MM:String(m).padStart(2,'0'),M:m,DD:String(d).padStart(2,'0'),D:d};
+ return f.replace(/YYYY|YY|MMMM|MMM|MM|M|DD|D/g,k=>t[k]);
+}

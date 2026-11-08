@@ -1,0 +1,74 @@
+{
+ "settings": {
+  "dateFormat": "D MMM YY",
+  "startRating": 1500,
+  "winPoints": 3,
+  "kFactor": 32,
+  "kFactorProvisional": 48,
+  "provisionalMatches": 10,
+  "doubleLoss": "draw",
+  "avatarUrl": "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
+  "byeAvatar": "39526584",
+  "newPlayerAvatar": "38723936"
+ },
+ "trophies": {
+  "matchWinMilestones": [
+   1,
+   10,
+   50,
+   100,
+   250,
+   500
+  ],
+  "eventWinMilestones": [
+   1,
+   5,
+   10,
+   25,
+   50,
+   100
+  ],
+  "medalColors": {
+   "gold": {
+    "highlight": "#fff1a8",
+    "base": "#e0b13a",
+    "shadow": "#8a6410",
+    "ink": "#4a3200"
+   },
+   "silver": {
+    "highlight": "#ffffff",
+    "base": "#b9c0cf",
+    "shadow": "#6b7388",
+    "ink": "#2e3546"
+   },
+   "bronze": {
+    "highlight": "#f6c9a0",
+    "base": "#c07a48",
+    "shadow": "#6b3a1a",
+    "ink": "#3a1e0a"
+   }
+  },
+  "ribbonColors": {
+   "rank": {
+    "left": "#4aa3cf",
+    "right": "#2f7ea8"
+   },
+   "most": {
+    "left": "#d9556a",
+    "right": "#a8364a"
+   },
+   "match": {
+    "left": "#4cbf86",
+    "right": "#2f8f62"
+   },
+   "event": {
+    "left": "#9b6bd6",
+    "right": "#6e43a8"
+   },
+   "mostmatch": {
+    "left": "#f08a3c",
+    "right": "#c4621c"
+   }
+  }
+ }
+}

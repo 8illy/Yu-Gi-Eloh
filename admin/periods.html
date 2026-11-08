@@ -16,12 +16,12 @@ function errors(){const e=[],ps=D.periods;
  for(let i=1;i<s.length;i++)if(!s[i-1].end||s[i-1].end>=s[i].start)e.push(`${periodLabel(s[i-1])} overlaps ${periodLabel(s[i])}`);
  return e}
 function status(){saveWork(D);const errs=errors(),out=errs.length?0:D.events.filter(e=>!D.periods.some(p=>inPeriod(p,e.date))).length;
- $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+(out?`<div>${out} event${out>1?'s':''} fall outside every period and won't count towards any ranking.</div>`:'')+`<div class=row><button data-a=ex ${errs.length?'disabled':''}>Export bundle.json</button></div><small>Upload the downloaded bundle.json over data/bundle.json on your server.</small>`}
+ $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+(out?`<div>${out} event${out>1?'s':''} fall outside every period and won't count towards any ranking.</div>`:'')+`<div class=row><button data-a=ex ${errs.length?'disabled':''}>Export data.json</button></div><small>Upload the downloaded data.json over data/data.json on your server.</small>`}
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(!k)return;const[i,f]=k.split('.');
  D.periods[i][f]=f==='start'?t.value:(t.value.trim()||undefined);status()});
 document.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a)return;
  if(a=='add'){D.periods.push({start:''});render()}
  else if(a.startsWith('rm')){D.periods.splice(+a.slice(2),1);render()}
  else if(a=='ex'){D.periods.sort((x,y)=>x.start.localeCompare(y.start));download(fmt(D));render()}});
-loadWork().then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/bundle.json ('+e.message+'). Serve the folder over HTTP.');
+loadWork().then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/data.json ('+e.message+'). Serve the folder over HTTP.');
 </script></body></html>

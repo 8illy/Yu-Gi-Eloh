@@ -5,10 +5,10 @@ let SRV,WD,WBASE,STALE=false,WN='';
 const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>0;return h.toString(36)+s.length};
 
 async function loadWork(){
- const r=await fetch('../data/bundle.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);
- const txt=await r.text(),h=hash(txt);SRV=JSON.parse(txt);SRV.periods??=[];
+ const[txt,cfg]=await Promise.all([fetchText('../',DATA_URL),loadConfig('../')]);
+ const h=hash(txt);SRV=JSON.parse(txt);SRV.periods??=[];
  let w=null;try{w=JSON.parse(localStorage.getItem(WK))}catch{}
- WBASE=h;STALE=false;WD=structuredClone(SRV);
+ WBASE=h;STALE=false;WD={...cfg,...structuredClone(SRV)};
  if(w){let pruned=false;
   // drop saved changes the server already contains (i.e. you uploaded them)
   const same=(m,list)=>{for(const id of Object.keys(m||{}))if(list.some(x=>String(x.id)===id&&J(x)===J(m[id]))){delete m[id];pruned=true}};
@@ -23,7 +23,7 @@ async function loadWork(){
  saveWork(WD);return WD;
 }
 
-// Call after any change to D: diffs D against the server bundle and stores only the differences.
+// Call after any change to D: diffs D against the server data and stores only the differences.
 function saveWork(D){
  const se=new Map(SRV.events.map(e=>[e.id,J(e)])),su=new Map(SRV.users.map(u=>[u.id,J(u)])),w={base:WBASE,events:{},users:{}};
  D.events.forEach(e=>{if(se.get(e.id)!==J(e))w.events[e.id]=e});
@@ -40,5 +40,5 @@ function banner(txt){let b=document.getElementById('work');
    if(a=='ex')download(fmt(WD));
    else if(a=='rs'&&confirm('Discard all unexported changes?')){localStorage.removeItem(WK);location.reload()}})}
  b.hidden=!txt;
- b.innerHTML=txt?`<div class=row><span><b>Unexported changes:</b> ${txt}.</span><button data-w=ex>Export all</button><button data-w=rs>Discard changes</button></div>${STALE?'<div class=err>The server bundle has changed since you started these changes. Exporting will overwrite those server changes.</div>':''}${WN?`<div class=err>${WN}</div>`:''}`:'';
+ b.innerHTML=txt?`<div class=row><span><b>Unexported changes:</b> ${txt}.</span><button data-w=ex>Export all</button><button data-w=rs>Discard changes</button></div>${STALE?'<div class=err>The server data has changed since you started these changes. Exporting will overwrite those server changes.</div>':''}${WN?`<div class=err>${WN}</div>`:''}`:'';
 }

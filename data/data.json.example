@@ -1,0 +1,15 @@
+{"periods":[
+{"name":"Season 1","start":"2026-01-01","end":"2026-10-31"},
+{"name":"Season 2","start":"2026-11-01"}
+],
+"users":[
+{"id":1,"name":"Timmy","avatar":"46986414"},
+{"id":2,"name":"Alex","avatar":"89631139"},
+{"id":3,"name":"Sam","avatar":"74677422"},
+{"id":4,"name":"Priya","avatar":"38033121"},
+{"id":5,"name":"Jo","avatar":"33396948"}
+],
+"events":[
+{"id":"2026-10-30-friday-locals","date":"2026-10-30","name":"Friday Locals","rated":true,"rounds":[{"phase":"swiss","matches":[{"p1":1,"p2":2,"result":"p1"},{"p1":3,"p2":4,"result":"p2"}]},{"phase":"swiss","matches":[{"p1":1,"p2":4,"result":"p1"},{"p1":2,"p2":3,"result":"dl"}]}],"standings":[{"r":1,"p":1},{"r":2,"p":4},{"r":3,"p":2},{"r":3,"p":3}]},
+{"id":"2026-11-06-friday-locals","date":"2026-11-06","name":"Friday Locals","rated":true,"rounds":[{"phase":"swiss","matches":[{"p1":1,"p2":2,"result":"p2"},{"p1":3,"p2":4,"result":"p1"},{"p1":5,"p2":null,"result":"bye"}]},{"phase":"swiss","matches":[{"p1":2,"p2":3,"result":"p1"},{"p1":1,"p2":5,"result":"p1"},{"p1":4,"p2":null,"result":"bye"}]}],"standings":[{"r":1,"p":2},{"r":2,"p":1},{"r":3,"p":3},{"r":4,"p":5},{"r":5,"p":4}]}
+]}
