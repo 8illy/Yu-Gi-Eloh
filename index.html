@@ -31,7 +31,12 @@ const evl=e=>`<a href="#/event/${esc(e.id)}">${esc(evName(e))}</a>`;
 const tbl=(h,rows,l=1)=>`<table><tr>${h.map((x,i)=>`<th${i<l?'':' class=r'}>${x}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map((x,i)=>`<td${i<l?'':' class=r'}>${x}</td>`).join('')}</tr>`).join('')}</table>`;
 const tot=h=>h.w+h.l+h.dl;
 
-const board=()=>sel()+`<div class="card lb">${tbl(['#','Player','Elo','W–L','Win %','1st places','Events'],S.list.map((p,i)=>[`${i+1}${dRank(p.id,i)}`,pl(p.id),`${Math.round(p.elo)}${dElo(p)}`,wl(p),wr(p),p.firsts,p.events]),2)}</div>`;
+// Leaderboard header: period name, dates (no end date = ongoing; "all time" starts at the first event) and totals
+const curPer=()=>PER==='all'?null:periodList(D).find(p=>p.start===PER);
+const hdr=()=>{const p=curPer(),first=D.events.reduce((a,e)=>!a||e.date<a?e.date:a,null),start=p?p.start:first,
+ st=(v,k)=>`<div><b>${v}</b><small>${k}</small></div>`;
+ return `<div class=card><h2>${esc(p?periodLabel(p):'All time')}</h2><div class=stats><span class=g>${start?st(fmtDate(start),'start'):''}${p&&p.end?st(fmtDate(p.end),'end'):''}</span><span class=g>${st(S.events.length,'events')}${st(S.matches.filter(m=>m.result!=='bye').length,'matches')}${st(S.list.length,'players')}</span></div></div>`};
+const board=()=>sel()+hdr()+`<div class="card lb">${tbl(['#','Player','Elo','W–L','Win %','1st places','Events'],S.list.map((p,i)=>[`${i+1}${dRank(p.id,i)}`,pl(p.id),`${Math.round(p.elo)}${dElo(p)}`,wl(p),wr(p),p.firsts,p.events]),2)}</div>`;
 
 // Trophies: all-time achievements, independent of the selected period
 let PT=[],EP=[];

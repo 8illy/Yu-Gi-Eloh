@@ -119,3 +119,5 @@ html{-webkit-text-size-adjust:100%}
 .nosel img{-webkit-user-drag:none;user-drag:none}
 .aka{padding-left:10px}
 .zero{color:var(--mut)}
+.g{display:contents}
+@media(max-width:700px){.g{display:flex;flex-basis:100%;gap:1rem 1.5rem}}
