@@ -72,6 +72,10 @@
    "elo": {
     "left": "#2fb8b0",
     "right": "#1f8a84"
+   },
+   "beat": {
+    "left": "#792dc1",
+    "right": "#5a1f94"
    }
   },
   "eloMilestones": [
@@ -81,6 +85,12 @@
    1800,
    1900,
    2000
+  ],
+  "beatMedals": [
+   {
+    "player": 1,
+    "image": "images/beat-medal.png"
+   }
   ]
  }
 }

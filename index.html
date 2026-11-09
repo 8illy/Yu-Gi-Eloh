@@ -53,6 +53,10 @@ function trophies(id){if(!D.trophies)return[];const T=[],tier=(i,n)=>i<n/3?'bron
   if(k>=0)T.push({d:dates[thr[k]-1],k:label[0]=='M'?'match':'event',tier:tier(k,thr.length),g:String(thr[k]),t:`${label} [${thr[k]}]`})};
  ms(D.trophies.matchWinMilestones,SA.matches.filter(m=>(m.result==='p1'&&m.p1===id)||(m.result==='p2'&&m.p2===id)).map(m=>m.date),'Match wins');
  ms(D.trophies.eventWinMilestones,SA.events.filter(e=>e.standings.some(s=>s.p===id&&s.r===1)).map(e=>e.date),'Event wins');
+ // beat a specific player (ids and face images come from config.json -> trophies.beatMedals)
+ (D.trophies.beatMedals||[]).forEach(b=>{if(b.player===id)return;
+  const w=SA.matches.find(m=>(m.result==='p1'&&m.p1===id&&m.p2===b.player)||(m.result==='p2'&&m.p2===id&&m.p1===b.player));
+  if(w)T.push({d:w.date,k:'beat',tier:'gold',g:b.image,t:`Beat ${SA.P[b.player]?SA.P[b.player].name:'#'+b.player}`})});
  const th=D.trophies.eloMilestones||[];
  if(th.length){let best=-1,bd='';
   EP.forEach(L=>{let k=-1,d='';
@@ -67,7 +71,7 @@ function medal(k,tier,g){const c=D.trophies.medalColors[tier],l=c.highlight,m=c.
  P={most:['M50 42L88 53V88C88 111 70 123 50 131 30 123 12 111 12 88V53Z','M50 50L81 59V88C81 106 66 116 50 123 34 116 19 106 19 88V59Z'],event:['M50 41L88 63V107L50 129 12 107V63Z','M50 49L81 67V103L50 121 19 103V67Z']}[k],
  oct=r=>[...Array(8)].map((_,i)=>{const a=(i*45+22.5)*Math.PI/180;return(50+r*Math.cos(a)).toFixed(1)+','+(86+r*Math.sin(a)).toFixed(1)}).join(' '),
  seal=[...Array(32)].map((_,i)=>{const a=i*Math.PI/16,r=i%2?39:45;return(50+r*Math.cos(a)).toFixed(1)+','+(86+r*Math.sin(a)).toFixed(1)}).join(' '),
- body=k=='elo'?`<polygon points="${oct(46)}" ${fo} stroke-linejoin=round /><polygon points="${oct(37)}" ${fi} />`:k=='mostmatch'?`<polygon points="${seal}" ${fo} stroke-linejoin=round /><circle cx=50 cy=86 r=31 ${fi} />`:P?`<path d="${P[0]}" ${fo} /><path d="${P[1]}" ${fi} />`:`<circle cx=50 cy=86 r=44 ${fo} /><circle cx=50 cy=86 r=38.5 fill=none stroke="${d}" stroke-width=3 stroke-dasharray="2 3.6" opacity=.7 /><circle cx=50 cy=86 r=32 ${fi} />`,
+ body=k=='beat'?`<circle cx=50 cy=86 r=44 ${fo} /><circle cx=50 cy=86 r=34 fill="${d}" /><clipPath id=bclip><circle cx=50 cy=86 r=31 /></clipPath><image href="${esc(g)}" x=19 y=55 width=62 height=62 preserveAspectRatio="xMidYMid slice" clip-path="url(#bclip)" />`:k=='elo'?`<polygon points="${oct(46)}" ${fo} stroke-linejoin=round /><polygon points="${oct(37)}" ${fi} />`:k=='mostmatch'?`<polygon points="${seal}" ${fo} stroke-linejoin=round /><circle cx=50 cy=86 r=31 ${fi} />`:P?`<path d="${P[0]}" ${fo} /><path d="${P[1]}" ${fi} />`:`<circle cx=50 cy=86 r=44 ${fo} /><circle cx=50 cy=86 r=38.5 fill=none stroke="${d}" stroke-width=3 stroke-dasharray="2 3.6" opacity=.7 /><circle cx=50 cy=86 r=32 ${fi} />`,
  txt=(y,sz,c,v)=>`<text x=50 y=${y} text-anchor=middle font-family="Georgia,serif" font-weight=700 font-size=${sz} fill="${c}">${v}</text>`,
  plate=`<rect x=27 y=104 width=46 height=18 rx=5 fill="${d}" stroke="${l}" stroke-width=1.5 />`+txt(117,g.length>3?10:13,l,g),
  card=a=>`<g transform="rotate(${a} 50 100)"><rect x=40 y=66 width=20 height=28 rx=3 fill="${l}" stroke="${t}" stroke-width=2 /><ellipse cx=50 cy=78 rx=5 ry=6.5 fill="${t}" opacity=.55 /></g>`,
@@ -75,6 +79,7 @@ function medal(k,tier,g){const c=D.trophies.medalColors[tier],l=c.highlight,m=c.
  star=[...Array(10)].map((_,i)=>{const a=i*Math.PI/5-Math.PI/2,r=i%2?9:21;return(50+r*Math.cos(a)).toFixed(1)+','+(82+r*Math.sin(a)).toFixed(1)}).join(' '),
  icon={rank:[0,1,2,3,4,5].map(i=>leaf(32+i*27,-1)+leaf(32+i*27,1)).join('')+txt(96,g.length>2?22:30,t,g),
   most:`<polygon points="${star}" fill="${t}" />`+plate,
+  beat:'',
   elo:`<polyline points="30,98 44,82 54,90 70,66" fill=none stroke="${t}" stroke-width=5 stroke-linecap=round stroke-linejoin=round /><polygon points="77,55 75.8,69.9 64.2,62.1" fill="${t}" />`+plate,
   mostmatch:`<g stroke="${t}" stroke-linecap=round fill=none><path d="M36 64L64 98M64 64L36 98" stroke-width=5 /><path d="M51.6 94.5L62.4 85.5M48.4 94.5L37.6 85.5" stroke-width=4 /></g><circle cx=64 cy=98 r=3.5 fill="${t}" /><circle cx=36 cy=98 r=3.5 fill="${t}" />`+plate,
   match:card(-24)+card(0)+card(24)+plate,

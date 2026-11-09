@@ -3,9 +3,9 @@
   "dateFormat": "D MMM YY",
   "startRating": 1500,
   "winPoints": 3,
-  "kFactor": 32,
-  "kFactorProvisional": 48,
-  "provisionalMatches": 10,
+  "kFactor": 24,
+  "kFactorProvisional": 40,
+  "provisionalMatches": 12,
   "doubleLoss": "draw",
   "avatarUrl": "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
   "byeAvatar": "39526584",
@@ -35,6 +35,12 @@
    1800,
    1900,
    2000
+  ],
+    "beatMedals": [
+   {
+    "player": 27,
+    "image": "images/beat-medal.png"
+   }
   ],
   "medalColors": {
    "gold": {
@@ -80,6 +86,10 @@
    "elo": {
     "left": "#2fb8b0",
     "right": "#1f8a84"
+   },
+   "beat": {
+    "left": "#792dc1",
+    "right": "#5a1f94"
    }
   }
  }
