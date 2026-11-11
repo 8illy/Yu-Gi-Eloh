@@ -12,7 +12,7 @@ const RESULTS=['p1','p2','dl','bye'];
 const DATA_URL='data/data.json',CONFIG_URL='data/config.json';
 const fetchText=async(base,url)=>{const r=await fetch((/^https?:/.test(url)?'':base)+url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(url+': HTTP '+r.status);return r.text()};
 const loadConfig=async base=>{let c={};try{c=JSON.parse(await fetchText(base,CONFIG_URL))}catch{}applySettings(c.settings);return c};
-async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return{...c,...JSON.parse(d)}}
+async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return normIds({...c,...JSON.parse(d)})}
 // one line per user/event so git diffs stay readable
 // Serialises ONLY the data file (periods, users, events); config.json is never written by the admin pages.
 const fmt=(d,e=d.events)=>{const L=a=>(a||[]).map(x=>JSON.stringify(x)).join(',\n');
@@ -77,3 +77,14 @@ function fmtDate(iso,pat){
  const t={YYYY:y,YY:String(y).slice(2),MMMM:M,MMM:M.slice(0,3),MM:String(m).padStart(2,'0'),M:m,DD:String(d).padStart(2,'0'),D:d};
  return f.replace(/YYYY|YY|MMMM|MMM|MM|M|DD|D/g,k=>t[k]);
 }
+
+// Player ids are strings (they can have leading zeros, e.g. "0002345"). Older numeric ids are converted on load.
+function normIds(d){
+ const S=v=>v==null?v:String(v);
+ (d.users||[]).forEach(u=>u.id=S(u.id));
+ (d.events||[]).forEach(e=>{(e.standings||[]).forEach(s=>s.p=S(s.p));
+  (e.rounds||[]).forEach(r=>r.matches.forEach(m=>{m.p1=S(m.p1);if(m.p2!=null)m.p2=S(m.p2)}))});
+ return d;
+}
+// Id for a player added by hand in the admin pages: m1, m2, ... (can't clash with imported ids)
+function newId(D){let n=0;D.users.forEach(u=>{const m=/^m(\d+)$/.exec(u.id);if(m)n=Math.max(n,+m[1])});return 'm'+(n+1)}

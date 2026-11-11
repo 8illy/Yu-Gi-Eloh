@@ -54,9 +54,9 @@ function trophies(id){if(!D.trophies)return[];const T=[],tier=(i,n)=>i<n/3?'bron
  ms(D.trophies.matchWinMilestones,SA.matches.filter(m=>(m.result==='p1'&&m.p1===id)||(m.result==='p2'&&m.p2===id)).map(m=>m.date),'Match wins');
  ms(D.trophies.eventWinMilestones,SA.events.filter(e=>e.standings.some(s=>s.p===id&&s.r===1)).map(e=>e.date),'Event wins');
  // beat a specific player (ids and face images come from config.json -> trophies.beatMedals)
- (D.trophies.beatMedals||[]).forEach(b=>{if(b.player===id)return;
-  const w=SA.matches.find(m=>(m.result==='p1'&&m.p1===id&&m.p2===b.player)||(m.result==='p2'&&m.p2===id&&m.p1===b.player));
-  if(w)T.push({d:w.date,k:'beat',tier:'gold',g:b.image,t:`Beat ${SA.P[b.player]?SA.P[b.player].name:'#'+b.player}`})});
+ (D.trophies.beatMedals||[]).forEach(b=>{const bp=String(b.player);if(bp===id)return;
+  const w=SA.matches.find(m=>(m.result==='p1'&&m.p1===id&&m.p2===bp)||(m.result==='p2'&&m.p2===id&&m.p1===bp));
+  if(w)T.push({d:w.date,k:'beat',tier:'gold',g:b.image,t:`Beat ${SA.P[bp]?SA.P[bp].name:'#'+bp}`})});
  const th=D.trophies.eloMilestones||[];
  if(th.length){let best=-1,bd='';
   EP.forEach(L=>{let k=-1,d='';
@@ -112,7 +112,7 @@ function event(id){const e=D.events.find(e=>e.id===id);if(!e)return'Unknown even
  e.rounds.map((rd,i)=>`<details class=card><summary>Round ${i+1} <small>${esc(rd.phase||'')}</small></summary>${rd.matches.map((m,j)=>`<div class=m>${mr(m,dv&&dv.mx[`${e.id}:${i}:${j}`])}</div>`).join('')}</details>`).join('')}
 
 function view(){const[,pg,id]=location.hash.split('/');
- $('#app').innerHTML=pg==='player'?player(+id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():board();scrollTo(0,0)}
+ $('#app').innerHTML=pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():board();scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
 loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load data/data.json ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());

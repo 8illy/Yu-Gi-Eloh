@@ -22,7 +22,7 @@ document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(t.datas
  status()});
 document.addEventListener('click',e=>{const a=e.target.dataset.a,pk=e.target.closest('[data-pick]');
  if(pk){const[i,id]=pk.dataset.pick.split('.');D.users[i].avatar=id;render();return}
- if(a=='add'){const id=Math.max(0,...D.users.map(u=>u.id))+1;D.users.push({id,name:'',avatar:CFG.newPlayerAvatar});render()}
+ if(a=='add'){const id=newId(D);D.users.push({id,name:'',avatar:CFG.newPlayerAvatar});render()}
  else if(a&&a.startsWith('rm')){D.users[+a.slice(2)].avatar='';render()}
  else if(a=='ex')download(fmt(D))});
 loadWork().then(d=>{D=d;render()}).catch(e=>$('#app').textContent='Could not load ../data/data.json ('+e.message+'). Serve the folder over HTTP.');

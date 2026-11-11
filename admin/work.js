@@ -6,7 +6,7 @@ const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>
 
 async function loadWork(){
  const[txt,cfg]=await Promise.all([fetchText('../',DATA_URL),loadConfig('../')]);
- const h=hash(txt);SRV=JSON.parse(txt);SRV.periods??=[];
+ const h=hash(txt);SRV=normIds(JSON.parse(txt));SRV.periods??=[];
  let w=null;try{w=JSON.parse(localStorage.getItem(WK))}catch{}
  WBASE=h;STALE=false;WD={...cfg,...structuredClone(SRV)};
  if(w){let pruned=false;
@@ -18,7 +18,7 @@ async function loadWork(){
    WBASE=pruned?h:w.base;STALE=WBASE!==h;
    const ev=w.events||{},us=w.users||{};
    WD.events=SRV.events.map(e=>ev[e.id]||e).concat(Object.values(ev).filter(e=>!SRV.events.some(x=>x.id===e.id)));
-   WD.users=SRV.users.map(u=>us[u.id]||u).concat(Object.values(us).filter(u=>!SRV.users.some(x=>x.id===u.id))).sort((a,b)=>a.id-b.id);
+   WD.users=SRV.users.map(u=>us[u.id]||u).concat(Object.values(us).filter(u=>!SRV.users.some(x=>x.id===u.id))).sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true}));
    if(w.periods)WD.periods=w.periods}}
  saveWork(WD);return WD;
 }
