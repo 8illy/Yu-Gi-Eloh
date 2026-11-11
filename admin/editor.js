@@ -26,8 +26,8 @@ function render(){
  status();
 }
 function status(){const x=ev(),errs=validate({users:D.users,events:rest()},x);let pv='';
- if(!errs.length){const per=periodFor(D,x.date),b=derive(D,per).P,a=derive({users:D.users,events:[...rest(),x]},per).P;
-  pv=`<h3>Elo after this ${EDIT?'change':'event'}</h3>`+x.standings.map(s=>`<div>${esc(a[s.p].name)}: ${Math.round(b[s.p].elo)} → <b>${Math.round(a[s.p].elo)}</b></div>`).join('')}
+ if(!errs.length){const per=periodFor(D,x.date),b=derive(resolveView(D),per).P,a=derive(resolveView({...D,events:[...rest(),x]}),per).P;
+  pv=`<h3>Elo after this ${EDIT?'change':'event'}</h3>`+[...new Set(x.standings.map(s=>canonId(D,s.p)))].filter(id=>a[id]&&b[id]&&!a[id].guest).map(id=>`<div>${esc(a[id].name)}: ${Math.round(b[id].elo)} → <b>${Math.round(a[id].elo)}</b></div>`).join('')}
  $('#status').innerHTML=(errs.length?errs.map(e=>`<div class=err>${esc(e)}</div>`).join(''):'<div class=win>Ready to export</div>')+pv+`<div class=row><button data-a=sv ${errs.length?'disabled':''}>Save event</button><button data-a=ex ${errs.length?'disabled':''}>Export data.json</button><button data-a=rs>${EDIT?'Discard changes':'Reset draft'}</button></div>`}
 
 document.addEventListener('change',e=>{const t=e.target,k=t.dataset.k;if(!k||!E)return;
@@ -58,7 +58,7 @@ document.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a||(!E&&a!=
 const ac=document.createElement('div');ac.id='ac';ac.hidden=true;document.body.append(ac);
 let acIn,acI=0,acL=[];
 function acShow(inp){acIn=inp;const q=inp.value.toLowerCase().replace(/\s*\(#\d+\)$/,'');
- const pool=inp.dataset.pool==='ev'?D.users.filter(u=>E.standings.some(s=>s.p===u.id)):D.users;
+ const pool=inp.dataset.pool==='ev'?D.users.filter(u=>E.standings.some(s=>s.p===u.id)):D.users.filter(u=>!(D.aliases&&D.aliases[u.id]));
  acL=pool.filter(u=>(u.name+' '+(u.nickname||'')).toLowerCase().includes(q)).slice(0,8);acI=0;
  const r=inp.getBoundingClientRect();ac.style.cssText=`left:${r.left+scrollX}px;top:${r.bottom+scrollY}px;min-width:${r.width}px`;
  ac.innerHTML=acL.map((u,i)=>`<div data-i=${i} class="${i?'':'on'}">${esc(lab(u.id))}</div>`).join('');ac.hidden=!acL.length}

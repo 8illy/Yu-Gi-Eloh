@@ -1,9 +1,9 @@
 // Shared by the public site and /admin. All stats are derived from the data; nothing is stored.
 // Built-in fallbacks only. The real values live in data/config.json -> settings (see applySettings).
-const CFG={start:1500,pts:3,K:32,kNew:48,newN:10,dl:'draw',byeAvatar:'39526584',newPlayerAvatar:'38723936',avatar:a=>`https://images.ygoprodeck.com/images/cards_cropped/${encodeURIComponent(a)}.jpg`};
+const CFG={start:1500,pts:3,K:32,kNew:48,newN:10,dl:'draw',byeAvatar:'39526584',newPlayerAvatar:'38723936',guestPrefix:'9900',avatar:a=>`https://images.ygoprodeck.com/images/cards_cropped/${encodeURIComponent(a)}.jpg`};
 // Copies config.json settings into CFG
 function applySettings(s={}){
- const m={startRating:'start',winPoints:'pts',kFactor:'K',kFactorProvisional:'kNew',provisionalMatches:'newN',doubleLoss:'dl',byeAvatar:'byeAvatar',newPlayerAvatar:'newPlayerAvatar'};
+ const m={startRating:'start',winPoints:'pts',kFactor:'K',kFactorProvisional:'kNew',provisionalMatches:'newN',doubleLoss:'dl',byeAvatar:'byeAvatar',newPlayerAvatar:'newPlayerAvatar',guestIdPrefix:'guestPrefix'};
  for(const k in m)if(s[k]!=null)CFG[m[k]]=s[k];
  if(s.avatarUrl)CFG.avatar=a=>s.avatarUrl.replace('{id}',encodeURIComponent(a));
 }
@@ -12,11 +12,11 @@ const RESULTS=['p1','p2','dl','bye'];
 const DATA_URL='data/data.json',CONFIG_URL='data/config.json';
 const fetchText=async(base,url)=>{const r=await fetch((/^https?:/.test(url)?'':base)+url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(url+': HTTP '+r.status);return r.text()};
 const loadConfig=async base=>{let c={};try{c=JSON.parse(await fetchText(base,CONFIG_URL))}catch{}applySettings(c.settings);return c};
-async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return normIds({...c,...JSON.parse(d)})}
+async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return resolveView(normIds({...c,...JSON.parse(d)}))}
 // one line per user/event so git diffs stay readable
 // Serialises ONLY the data file (periods, users, events); config.json is never written by the admin pages.
 const fmt=(d,e=d.events)=>{const L=a=>(a||[]).map(x=>JSON.stringify(x)).join(',\n');
- return '{"periods":[\n'+L(d.periods)+'\n],\n"users":[\n'+L(d.users)+'\n],\n"events":[\n'+L(e)+'\n]}\n'};
+ return '{"periods":[\n'+L(d.periods)+'\n],\n"users":[\n'+L(d.users)+'\n],\n"events":[\n'+L(e)+'\n]'+(d.aliases&&Object.keys(d.aliases).length?',\n"aliases":{\n'+Object.entries(d.aliases).map(([k,v])=>JSON.stringify(k)+':'+JSON.stringify(v)).join(',\n')+'\n}':'')+'}\n'};
 
 function validate(d,ev){
  const e=[],ids=new Set(d.users.map(u=>u.id)),inSt=new Set(ev.standings.map(s=>s.p));
@@ -50,13 +50,13 @@ function derive(d,per=null){
    const a=P[m.p1],b=P[m.p2];
    const mo={...m,event:e.id,date:e.date,round:i+1,phase:rd.phase,j};matches.push(mo);mx[`${e.id}:${i}:${j}`]=mo;
    if(m.result==='bye'){a.byes++;pt[a.id]+=CFG.pts;return}
-   const h=(p,o)=>p.h2h[o]??={w:0,l:0,dl:0},ha=h(a,b.id),hb=h(b,a.id),rated=e.rated!==false;
+   const h=(p,o)=>a.guest||b.guest?{w:0,l:0,dl:0}:(p.h2h[o]??={w:0,l:0,dl:0}),ha=h(a,b.id),hb=h(b,a.id),rated=e.rated!==false;
    if(m.result==='dl'){a.dl++;b.dl++;ha.dl++;hb.dl++;if(rated&&CFG.dl==='draw')[mo.d1,mo.d2]=upd(a,b,.5);mo.r1=a.elo;mo.r2=b.elo;return}
    const[w,l,hw,hl]=m.result==='p1'?[a,b,ha,hb]:[b,a,hb,ha];
    w.w++;l.l++;hw.w++;hl.l++;pt[w.id]+=CFG.pts;
    if(rated){const[x,y]=upd(w,l,1);if(w===a){mo.d1=x;mo.d2=y}else{mo.d1=y;mo.d2=x}}mo.r1=a.elo;mo.r2=b.elo;
   }))});
- return{P,pts,matches,mx,events,list:Object.values(P).filter(p=>p.events).sort((a,b)=>b.elo-a.elo)};
+ return{P,pts,matches,mx,events,list:Object.values(P).filter(p=>p.events&&!p.guest).sort((a,b)=>b.elo-a.elo)};
 }
 function download(txt,name='data.json'){const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));l.download=name;l.click()}
 // Ranking periods: {start, end?, name?}; no end = ongoing. per=null means all time.
@@ -88,3 +88,21 @@ function normIds(d){
 }
 // Id for a player added by hand in the admin pages: m1, m2, ... (can't clash with imported ids)
 function newId(D){let n=0;D.users.forEach(u=>{const m=/^m(\d+)$/.exec(u.id);if(m)n=Math.max(n,+m[1])});return 'm'+(n+1)}
+
+// Public view of the data. Alias accounts (data.json "aliases": {aliasId: mainId}) are merged into their main
+// account. Guest accounts (id starts with settings.guestIdPrefix) become a brand-new, unranked "Guest" in every
+// event they appear in, so the same guest id used on two nights is two separate players.
+function canonId(d,id){const A=d.aliases||{};id=String(id);for(let n=0;A[id]!=null&&n<10;n++)id=String(A[id]);return id}
+function resolveView(d){
+ const A=d.aliases||{},pre=String(CFG.guestPrefix||''),isG=id=>pre&&String(id).startsWith(pre),guests=[];
+ const events=d.events.map(e=>{
+  const gm={};let gi=0;
+  const map=id=>{if(id==null)return id;id=String(id);
+   if(isG(id))return gm[id]??=(()=>{const g=`${pre}g${++gi}@${e.id}`;guests.push({id:g,name:'Guest',avatar:CFG.newPlayerAvatar,guest:true});return g})();
+   return canonId(d,id)};
+  const best=new Map();   // one account of the same person per event: keep the better rank
+  (e.standings||[]).forEach(s=>{const p=map(s.p),o=best.get(p);if(!o||s.r<o.r)best.set(p,{...s,p})});
+  const rounds=(e.rounds||[]).map(r=>({...r,matches:r.matches.map(m=>({...m,p1:map(m.p1),p2:m.p2==null?null:map(m.p2)})).filter(m=>m.p1!==m.p2)}));
+  return{...e,standings:[...best.values()],rounds}});
+ return{...d,users:[...d.users.filter(u=>!isG(u.id)&&A[u.id]==null),...guests],events};
+}

@@ -19,8 +19,8 @@ const dRank=(id,i)=>{if(!PV)return'';const j=PV.list.findIndex(x=>x.id===id);ret
 const dElo=p=>{if(!PV)return'';const q=PV.P[p.id];if(!q||!PV.list.includes(q))return'';const d=Math.round(p.elo-q.elo);return chg(d,(d>0?'+':'')+d)};
 const sel=()=>`<div class=row style="justify-content:flex-end"><label>Ranking period <select id=per><option value=all${PER==='all'?' selected':''}>All time</option>${periodList(D).map(p=>`<option value="${esc(p.start)}"${PER===p.start?' selected':''}>${esc(periodLabel(p))}</option>`).join('')}</select></label></div>`;
 const av=u=>`<img class=av src="${esc(CFG.avatar(u.avatar))}" alt="" onerror="this.style.visibility='hidden'">`;
-const pl=id=>{const p=S.P[id];return p?`<a class=pl href="#/player/${id}">${av(p)}<span class=nm>${esc(p.name)}</span></a>`:'?'};
-const plr=id=>{const p=S.P[id];return p?`<a class="pl pr" href="#/player/${id}"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</a>`:'?'};
+const pl=id=>{const p=S.P[id];return p?(p.guest?`<span class=pl>${av(p)}<span class=nm>${esc(p.name)}</span></span>`:`<a class=pl href="#/player/${id}">${av(p)}<span class=nm>${esc(p.name)}</span></a>`):'?'};
+const plr=id=>{const p=S.P[id];return p?(p.guest?`<span class="pl pr"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</span>`:`<a class="pl pr" href="#/player/${id}"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</a>`):'?'};
 // A bye is shown as a normal-looking player (not a link) so layouts stay the same
 const byep=after=>{const i=av({avatar:CFG.byeAvatar});return after?`<span class="pl pr"><span class=nm>Bye</span>${i.replace('class=av','class="av after"')}</span>`:`<span class=pl>${i}<span class=nm>Bye</span></span>`};
 // wins include byes; the tooltips break the numbers down
