@@ -9949,7 +9949,7 @@
       "id": "E25-370583",
       "date": "2026-03-09",
       "name": "Bliss Bonus Series - Genesys [100 Points]",
-      "rated": true,
+      "rated": false,
       "rounds": [
         {
           "phase": "swiss",
@@ -10265,7 +10265,7 @@
       "id": "E25-370582",
       "date": "2026-03-02",
       "name": "Bliss Bonus Series - Genesys [100 Points]",
-      "rated": true,
+      "rated": false,
       "rounds": [
         {
           "phase": "swiss",
@@ -10543,7 +10543,7 @@
       "id": "E25-370581",
       "date": "2026-02-23",
       "name": "Bliss Bonus Series - Genesys [100 Points]",
-      "rated": true,
+      "rated": false,
       "rounds": [
         {
           "phase": "swiss",
@@ -10929,7 +10929,7 @@
       "id": "E25-370580",
       "date": "2026-02-16",
       "name": "Bliss Bonus Series - Genesys [100 Points]",
-      "rated": true,
+      "rated": false,
       "rounds": [
         {
           "phase": "swiss",
