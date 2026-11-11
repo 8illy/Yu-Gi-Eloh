@@ -10,7 +10,7 @@
   "avatarUrl": "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
   "byeAvatar": "39526584",
   "newPlayerAvatar": "38723936",
-  "guestIdPrefix" : "9900",
+  "guestIdPrefix" : "9900"
  },
   "trophies": {
   "matchWinMilestones": [

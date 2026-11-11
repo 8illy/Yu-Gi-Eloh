@@ -54,12 +54,12 @@ document.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a||(!E&&a!=
   saveWork(D);if(a=='ex')download(fmt(D))}
  render();save()});
 
-// Autocomplete: matches name or nickname, shows only "Name (#id)"
+// Autocomplete: matches the name, shows "Name (#id)"
 const ac=document.createElement('div');ac.id='ac';ac.hidden=true;document.body.append(ac);
 let acIn,acI=0,acL=[];
 function acShow(inp){acIn=inp;const q=inp.value.toLowerCase().replace(/\s*\(#\d+\)$/,'');
  const pool=inp.dataset.pool==='ev'?D.users.filter(u=>E.standings.some(s=>s.p===u.id)):D.users.filter(u=>!(D.aliases&&D.aliases[u.id]));
- acL=pool.filter(u=>(u.name+' '+(u.nickname||'')).toLowerCase().includes(q)).slice(0,8);acI=0;
+ acL=pool.filter(u=>u.name.toLowerCase().includes(q)).slice(0,8);acI=0;
  const r=inp.getBoundingClientRect();ac.style.cssText=`left:${r.left+scrollX}px;top:${r.bottom+scrollY}px;min-width:${r.width}px`;
  ac.innerHTML=acL.map((u,i)=>`<div data-i=${i} class="${i?'':'on'}">${esc(lab(u.id))}</div>`).join('');ac.hidden=!acL.length}
 function acPick(i){const u=acL[i];if(!u)return;acIn.value=lab(u.id);ac.hidden=true;acIn.dispatchEvent(new Event('change',{bubbles:true}))}

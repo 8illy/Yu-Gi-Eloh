@@ -6,9 +6,10 @@ const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=(h*33^s.charCodeAt(i))>>>
 
 async function loadWork(){
  const[txt,cfg]=await Promise.all([fetchText('../',DATA_URL),loadConfig('../')]);
+ if(CONFIG_ERROR){const b=document.createElement('div');b.className='card err';b.textContent=CONFIG_ERROR;document.querySelector('main').prepend(b)}
  const h=hash(txt);SRV=normIds(JSON.parse(txt));SRV.periods??=[];
  let w=null;try{w=JSON.parse(localStorage.getItem(WK))}catch{}
- WBASE=h;STALE=false;WD={...cfg,...structuredClone(SRV)};
+ WBASE=h;STALE=false;WD={...structuredClone(SRV),settings:cfg.settings,trophies:cfg.trophies};
  if(w){let pruned=false;
   // drop saved changes the server already contains (i.e. you uploaded them)
   const same=(m,list)=>{for(const id of Object.keys(m||{}))if(list.some(x=>String(x.id)===id&&J(x)===J(m[id]))){delete m[id];pruned=true}};
@@ -31,7 +32,7 @@ function saveWork(D){
  if(J(D.periods)!==J(SRV.periods))w.periods=D.periods;
  const n=[Object.keys(w.events).length,Object.keys(w.users).length],any=n[0]||n[1]||w.periods;
  WN='';try{any?localStorage.setItem(WK,J(w)):localStorage.removeItem(WK)}catch{WN='Browser storage is full, so these changes may not survive a reload. Export soon.'}
- banner(any?`${n[0]} event${n[0]==1?'':'s'}, ${n[1]} player${n[1]==1?'':'s'}${w.periods?', periods':''}`:'');
+ banner(any?`${n[0]} event${n[0]==1?'':'s'}, ${n[1]} player${n[1]==1?'':'s'}${w.periods?', formats':''}`:'');
 }
 
 function banner(txt){let b=document.getElementById('work');

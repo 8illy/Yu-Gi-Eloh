@@ -117,7 +117,13 @@ html{-webkit-text-size-adjust:100%}
 @media(max-width:700px){.m .w.rv{flex-direction:row}}
 .nosel{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .nosel img{-webkit-user-drag:none;user-drag:none}
-.aka{padding-left:10px}
 .zero{color:var(--mut)}
 .g{display:contents}
 @media(max-width:700px){.g{display:flex;flex-basis:100%;gap:1rem 1.5rem}}
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1rem}
+.wcard{display:flex;flex-direction:column;align-items:center;gap:.5rem;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;text-align:center;text-decoration:none}
+.wcard:hover,.wcard:focus-visible{border-color:var(--acc)}
+.wcard small{color:var(--mut)}
+.wcard .av{width:120px;height:120px;margin:0;border-radius:10%}
+.welo{font-size:1.5rem;font-weight:700;color:var(--acc);font-variant-numeric:lining-nums tabular-nums}
+@media(max-width:700px){.wgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wcard .av{width:96px;height:96px}}

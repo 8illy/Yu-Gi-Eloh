@@ -11,8 +11,12 @@ const RESULTS=['p1','p2','dl','bye'];
 // Where the files live. Point DATA_URL at another host (a full https URL) to move the data elsewhere.
 const DATA_URL='data/data.json',CONFIG_URL='data/config.json';
 const fetchText=async(base,url)=>{const r=await fetch((/^https?:/.test(url)?'':base)+url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(url+': HTTP '+r.status);return r.text()};
-const loadConfig=async base=>{let c={};try{c=JSON.parse(await fetchText(base,CONFIG_URL))}catch{}applySettings(c.settings);return c};
-async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return resolveView(normIds({...c,...JSON.parse(d)}))}
+let CONFIG_ERROR='';   // set when config.json can't be loaded or parsed, so the pages can say so instead of silently using defaults
+const loadConfig=async base=>{let c={};CONFIG_ERROR='';
+ try{c=JSON.parse(await fetchText(base,CONFIG_URL))}
+ catch(e){CONFIG_ERROR=`${CONFIG_URL} could not be used (${e.message}). The built-in defaults are being used instead.`;console.error(CONFIG_ERROR)}
+ applySettings(c.settings);return c};
+async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return resolveView(normIds({...JSON.parse(d),settings:c.settings,trophies:c.trophies}))}
 // one line per user/event so git diffs stay readable
 // Serialises ONLY the data file (periods, users, events); config.json is never written by the admin pages.
 const fmt=(d,e=d.events)=>{const L=a=>(a||[]).map(x=>JSON.stringify(x)).join(',\n');
