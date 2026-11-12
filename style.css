@@ -120,10 +120,39 @@ html{-webkit-text-size-adjust:100%}
 .zero{color:var(--mut)}
 .g{display:contents}
 @media(max-width:700px){.g{display:flex;flex-basis:100%;gap:1rem 1.5rem}}
-.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:1rem}
-.wcard{display:flex;flex-direction:column;align-items:center;gap:.5rem;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;text-align:center;text-decoration:none}
-.wcard:hover,.wcard:focus-visible{border-color:var(--acc)}
-.wcard small{color:var(--mut)}
-.wcard .av{width:120px;height:120px;margin:0;border-radius:10%}
-.welo{font-size:1.5rem;font-weight:700;color:var(--acc);font-variant-numeric:lining-nums tabular-nums}
-@media(max-width:700px){.wgrid{grid-template-columns:repeat(2,minmax(0,1fr))}.wcard .av{width:96px;height:96px}}
+.dtq{width:100%;margin-bottom:.6rem}
+th.sortable{cursor:pointer;white-space:nowrap}
+th.sortable:hover{color:var(--acc)}
+.pager{display:flex;gap:.75rem;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:.75rem;color:var(--mut)}
+.pg{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.dtso{display:none}
+.nosel input,.nosel select{-webkit-user-select:text;user-select:text}
+@media(max-width:700px){.dtso{display:inline-block}}
+/* Format Winners: framed picture above a gold plaque, like an employee-of-the-month wall */
+.wgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2rem 1rem}
+.wcard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .9rem;
+    padding: .5rem;
+    text-decoration: none;
+    text-align: center;
+    color: inherit;
+    background: linear-gradient(180deg, #4d2d2d 0%, #6b4343 48%, #633939 52%, #1c0b0b 100%);
+    border: 2px solid #8a6212;
+}
+.wframe{display:block;padding:11px;border-radius:3px;
+ background:linear-gradient(135deg,#f6dc8a,#b8862b 30%,#8a6212 52%,#e9c867 78%,#a9781f);
+ box-shadow:0 8px 16px rgba(0,0,0,.45),inset 0 0 0 2px rgba(255,255,255,.35),inset 0 0 8px rgba(0,0,0,.55);transition:transform .15s}
+.wcard .av{display:block;width:150px;height:150px;margin:0;border-radius:0;border:8px solid #efe7d2;box-shadow:0 0 0 2px rgba(0,0,0,.45)}
+.wplate{position:relative;display:flex;flex-direction:column;align-items:center;gap:.1rem;width:100%;max-width:215px;padding:.65rem 1.3rem;border-radius:3px;color:#4a3200;
+ background:linear-gradient(180deg,#f3d77c 0%,#d4a93a 48%,#b88a22 52%,#e7c565 100%);border:2px solid #8a6212;
+ box-shadow:0 4px 9px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -1px 0 rgba(0,0,0,.25)}
+.wplate::before,.wplate::after{content:"";position:absolute;top:50%;width:7px;height:7px;margin-top:-3px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff3c4,#7a5510)}
+.wplate::before{left:7px}.wplate::after{right:7px}
+.wplate small{color:#5a3f08;font-size:.68rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-shadow:0 1px 0 rgba(255,255,255,.55)}
+.wplate b{font:700 1.15rem Georgia,"Iowan Old Style",serif;color:#3a2600;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.welo{font-weight:600;font-size:.95rem;color:#4a3200;text-shadow:0 1px 0 rgba(255,255,255,.45);font-variant-numeric:lining-nums tabular-nums}
+.wcard:hover .wframe,.wcard:focus-visible .wframe{transform:translateY(-4px)}
+@media(max-width:700px){.wgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem .5rem}.wcard .av{width:104px;height:104px}.wplate{padding:.5rem .9rem}.wplate b{font-size:1rem}}

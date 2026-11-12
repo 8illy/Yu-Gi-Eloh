@@ -92,16 +92,16 @@ function player(id){const p=S.P[id];if(!p)return'Unknown player';
  const card=(q,X,all)=>`<div class="card stats"><div class=lft><span class=big>${Math.round(q.elo)}</span><small>${X.list.includes(q)?`${all?'All-time Elo':'Elo'}, rank ${X.list.indexOf(q)+1} of ${X.list.length}`:all?'No events yet':'No events in this period'}</small></div>${X.list.includes(q)?`<div title="Highest Elo reached"><b>${peak(q,X)}</b><small>highest Elo</small></div>`:''}${st(wl(q),'wins–losses')}${st(q.dl,'double losses')}${st(q.byes,'byes')}${st(wr(q),'win rate')}${st(q.firsts,'1st places')}${st(q.events,'events')}</div>`;
  const h2h=Object.entries(p.h2h).sort((a,b)=>S.P[a[0]].name.localeCompare(S.P[b[0]].name)).map(([o,h])=>[pl(o),h.w,`<span title="Losses: ${h.l}, double losses: ${h.dl}">${h.l+h.dl}</span>`,pct(h.w,tot(h))]);
  const em=Object.fromEntries(D.events.map(e=>[e.id,e])),
-  hist=S.matches.filter(m=>m.p1===id||m.p2===id).reverse().map(m=>{const o=m.p1===id?m.p2:m.p1,r=m.result;
-   return[fmtDate(m.date),o==null?byep():pl(o),(r==='bye'?'Bye':r==='dl'?'<span class=dn>Double loss</span>':(r==='p1')===(m.p1===id)?'<span class=win>Win</span>':'<span class=dn>Loss</span>')+dchip(m.p1===id?m.d1:m.d2),`${evl(em[m.event])} <small>round ${m.round}</small>`]});
+  hist=S.matches.map((m,ix)=>({m,ix})).filter(({m})=>m.p1===id||m.p2===id).reverse().map(({m,ix})=>{const o=m.p1===id?m.p2:m.p1,r=m.result;
+   return{v:[ix,o==null?'Bye':S.P[o].name,r==='bye'?3:r==='dl'?2:(r==='p1')===(m.p1===id)?0:1,evName(em[m.event])],c:[fmtDate(m.date),o==null?byep():pl(o),(r==='bye'?'Bye':r==='dl'?'<span class=dn>Double loss</span>':(r==='p1')===(m.p1===id)?'<span class=win>Win</span>':'<span class=dn>Loss</span>')+dchip(m.p1===id?m.d1:m.d2),`${evl(em[m.event])} <small>round ${m.round}</small>`]}});
  const ed={};S.matches.forEach(m=>{if(m.p1===id&&m.d1!=null)ed[m.event]=(ed[m.event]||0)+m.d1;if(m.p2===id&&m.d2!=null)ed[m.event]=(ed[m.event]||0)+m.d2});
- const evs=S.events.filter(e=>e.standings.some(s=>s.p==id)).reverse().map(e=>{const s=e.standings.find(s=>s.p==id);return[fmtDate(e.date),evl(e),s.r,S.pts[e.id][id],dchip(ed[e.id])||'–']});
+ const evs=S.events.filter(e=>e.standings.some(s=>s.p==id)).reverse().map(e=>{const s=e.standings.find(s=>s.p==id);return{v:[Date.parse(e.date),evName(e),s.r,S.pts[e.id][id],ed[e.id]||0],c:[fmtDate(e.date),evl(e),s.r,S.pts[e.id][id],dchip(ed[e.id])||'–']}});
  return sel()+`<div class=hero>${av(p)}<div class=who><h2><span>${esc(p.name)}</span></h2><div class=panels>${PER==='all'?'':card(p,S,0)}${card(SA.P[id],SA,1)}</div></div></div>
  ${trophyCard(id)}<details class="card h2h"><summary>Head to head</summary>${tbl(['Opponent','W','L','Win %'],h2h)}</details>
- <details class=card><summary>Events</summary>${tbl(['Date','Event','Place','Pts','Elo'],evs,2)}</details>
- <details class="card mh"><summary>Match History</summary>${tbl(['Date','Opponent','Result','Event'],hist,4)}</details>`}
+ <details class=card><summary>Events</summary>${dt('pe:'+id,[{t:'Date'},{t:'Event'},{t:'Place',a:'r'},{t:'Pts',a:'r'},{t:'Elo',a:'r'}],evs,{size:10})}</details>
+ <details class="card mh"><summary>Match History</summary>${dt('pm:'+id,[{t:'Date'},{t:'Opponent'},{t:'Result'},{t:'Event'}],hist,{size:20})}</details>`}
 
-const events=()=>`<div class=card>${tbl(['Date','Event','Players','Winner'],[...D.events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{const w=e.standings.find(s=>s.r===1);return[fmtDate(e.date),evl(e),e.standings.length,w?plr(w.p):'']}),2)}</div>`;
+const events=()=>`<div class=card>${dt('events',[{t:'Date'},{t:'Event'},{t:'Players',a:'r'},{t:'Winner',a:'r'}],[...D.events].sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{const w=e.standings.find(s=>s.r===1),wn=w&&S.P[w.p]?S.P[w.p].name:'';return{v:[Date.parse(e.date),evName(e),e.standings.length,wn],c:[fmtDate(e.date),evl(e),e.standings.length,w?plr(w.p):'']}}),{size:25})}</div>`;
 
 const mr=(m,o)=>m.result==='bye'?`<span class="l win"><span class=w>${pl(m.p1)}</span></span><span>vs</span><span class=r>${byep(true)}</span>`:`<span class="l ${m.result=='p1'?'win':''}"><span class=w>${pl(m.p1)}${dchip(o&&o.d1)}</span></span><span>vs</span><span class="r ${m.result=='p2'?'win':''}"><span class="w rv">${plr(m.p2)}${dchip(o&&o.d2)}</span></span>${m.result=='dl'?'<i>double loss</i>':''}`;
 function event(id){const e=D.events.find(e=>e.id===id);if(!e)return'Unknown event';
@@ -112,14 +112,40 @@ function event(id){const e=D.events.find(e=>e.id===id);if(!e)return'Unknown even
  e.rounds.map((rd,i)=>`<details class=card><summary>Round ${i+1} <small>${esc(rd.phase||'')}</small></summary>${rd.matches.map((m,j)=>`<div class=m>${mr(m,dv&&dv.mx[`${e.id}:${i}:${j}`])}</div>`).join('')}</details>`).join('')}
 
 // Format Winners: the #1 player of every finished format (players level on the same rounded Elo share it)
+// Searchable, sortable, paged table. Rows are {c:[cell html...], v:[sort values...]}. State (search / sort / page) is kept in TS.
+const TB={},TS={},strip=h=>String(h).replace(/<[^>]*>/g,'');
+function dt(id,cols,rows,o={}){
+ rows.forEach((r,i)=>{r.i=i;r.s=r.c.map(strip).join(' ').toLowerCase()});
+ TB[id]={cols,rows};TS[id]??={q:'',page:0,size:o.size||25,sort:0,dir:-1};
+ return `<div class=dt data-t="${esc(id)}"><input class=dtq type=search autocomplete=off placeholder="Search…" aria-label=Search value="${esc(TS[id].q)}"><div class=dtb></div></div>`}
+function dtDraw(id){const{cols,rows}=TB[id],st=TS[id],el=$(`.dt[data-t="${id}"] .dtb`);if(!el)return;
+ const toks=st.q.toLowerCase().split(/\s+/).filter(Boolean);
+ const list=rows.filter(r=>toks.every(t=>r.s.includes(t))).sort((a,b)=>{const x=a.v[st.sort],y=b.v[st.sort],
+  c=typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y),undefined,{numeric:true,sensitivity:'base'});return c?c*st.dir:a.i-b.i});
+ const pages=Math.max(1,Math.ceil(list.length/st.size));st.page=Math.min(Math.max(st.page,0),pages-1);
+ const show=list.slice(st.page*st.size,(st.page+1)*st.size),sizes=[...new Set([10,25,50,100,st.size])].sort((a,b)=>a-b);
+ el.innerHTML=`<table><tr>${cols.map((c,j)=>`<th class="sortable${c.a==='r'?' r':''}" data-s=${j}>${c.t}${st.sort===j?(st.dir>0?' ▲':' ▼'):''}</th>`).join('')}</tr>`+
+  (show.map(r=>`<tr>${r.c.map((x,j)=>`<td${cols[j].a==='r'?' class=r':''}>${x}</td>`).join('')}</tr>`).join('')||`<tr><td colspan=${cols.length}>Nothing matches your search.</td></tr>`)+`</table>`+
+  `<div class=pager><span>${list.length} result${list.length==1?'':'s'}</span><span class=pg><select class=dtso aria-label="Sort by">${cols.flatMap((c,j)=>[1,-1].map(d=>`<option value="${j}:${d}"${st.sort===j&&st.dir===d?' selected':''}>${c.t} ${d>0?'▲':'▼'}</option>`)).join('')}</select>`+
+  `<button data-p=prev${st.page?'':' disabled'}>‹ Prev</button>Page ${st.page+1} of ${pages}<button data-p=next${st.page<pages-1?'':' disabled'}>Next ›</button>`+
+  `<select class=dts aria-label="Rows per page">${sizes.map(n=>`<option${n==st.size?' selected':''}>${n}</option>`).join('')}</select></span></div>`}
 const winners=()=>{const today=new Date().toISOString().slice(0,10),done=periodList(D).filter(p=>p.end&&p.end<today);
  const cards=done.flatMap(p=>{const L=(dc[p.start]??=derive(D,p)).list;if(!L.length)return[];const top=Math.round(L[0].elo);
-  return L.filter(x=>Math.round(x.elo)===top).map(x=>`<a class=wcard href="#/player/${x.id}"><small>${esc(periodLabel(p))}</small>${av(x)}<b>${esc(x.name)}</b><span class=welo>${top}</span></a>`)});
+  return L.filter(x=>Math.round(x.elo)===top).map(x=>`<a class=wcard href="#/player/${x.id}"><span class=wframe>${av(x)}</span><span class=wplate><small>${esc(periodLabel(p))} winner</small><b>${esc(x.name)}</b><span class=welo>Elo ${top}</span></span></a>`)});
  return `<h2>Format Winners</h2>`+(cards.length?`<div class=wgrid>${cards.join('')}</div>`:'<div class=card>No formats have finished yet.</div>')};
 function view(){const[,pg,id]=location.hash.split('/');
- $('#app').innerHTML=(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());scrollTo(0,0)}
+ $('#app').innerHTML=(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
 loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load data/data.json ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
-document.addEventListener('change',e=>{if(e.target.id==='per'){const o=[...document.querySelectorAll('#app details')].map(d=>d.open);PER=e.target.value;calc();view();document.querySelectorAll('#app details').forEach((d,i)=>d.open=!!o[i])}});
+// table controls (delegated): search box, column headers, paging, rows per page, mobile sort menu
+const dtOf=el=>{const w=el.closest&&el.closest('.dt');return w&&w.dataset.t};
+document.addEventListener('input',e=>{if(!e.target.classList.contains('dtq'))return;const id=dtOf(e.target);TS[id].q=e.target.value;TS[id].page=0;dtDraw(id)});
+document.addEventListener('click',e=>{const t=e.target,id=dtOf(t);if(!id)return;const st=TS[id];
+ if(t.dataset.s!=null){const j=+t.dataset.s;if(st.sort===j)st.dir=-st.dir;else{st.sort=j;st.dir=TB[id].cols[j].a==='r'?-1:1}st.page=0;dtDraw(id)}
+ else if(t.dataset.p){st.page+=t.dataset.p==='next'?1:-1;dtDraw(id)}});
+document.addEventListener('change',e=>{const t=e.target,id=dtOf(t);if(!id)return;const st=TS[id];
+ if(t.classList.contains('dts')){st.size=+t.value;st.page=0;dtDraw(id)}
+ else if(t.classList.contains('dtso')){const[j,d]=t.value.split(':');st.sort=+j;st.dir=+d;st.page=0;dtDraw(id)}});
+document.addEventListener('change',e=>{if(e.target.id==='per'){const o=[...document.querySelectorAll('#app details')].map(d=>d.open);PER=e.target.value;Object.keys(TS).forEach(k=>delete TS[k]);calc();view();document.querySelectorAll('#app details').forEach((d,i)=>d.open=!!o[i])}});
 </script></body></html>
