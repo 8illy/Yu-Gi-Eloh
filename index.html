@@ -142,7 +142,7 @@ function view(){const[,pg,id]=location.hash.split('/');
  $('#app').innerHTML=(OFFLINE_SINCE?`<div class="card offline">You're offline. Showing the data last saved on this device${OFFLINE_SINCE>1?` (${fmtDate(new Date(OFFLINE_SINCE).toISOString().slice(0,10))})`:''}.</div>`:'')+(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load '+DATA_URL+' ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
+loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent=navigator.onLine===false?"You're offline and this device has no saved copy of the data yet. Connect once, open the app, and it will work offline from then on.":'Could not load '+DATA_URL+' ('+e.message+'). If you are running the files locally, serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
 // table controls (delegated): search box, column headers, paging, rows per page, mobile sort menu
 const dtOf=el=>{const w=el.closest&&el.closest('.dt');return w&&w.dataset.t};

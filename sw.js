@@ -1,7 +1,7 @@
 // Service worker: lets the site install as an app and keep working offline.
 // Everything is "network first": online you always get the latest files and data, and each response is saved.
 // Offline (or if the network is very slow) the last saved copy is used, including the latest config.json / data.json.
-const VER = 'v1', SHELL = 'shell-' + VER, DATA = 'data-' + VER, IMG = 'img-' + VER;
+const VER = 'v2', SHELL = 'shell-' + VER, DATA = 'data-' + VER, IMG = 'img-' + VER;
 const PRECACHE = ['./', 'index.html', 'lib.js', 'style.css', 'manifest.webmanifest', 'favicon.ico', 'logo.png',
                   'icons/icon-192.png', 'icons/icon-512.png', 'images/beat-medal.png'];
 const MAX_IMAGES = 500;
@@ -67,7 +67,9 @@ async function imageFirst(req) {
 self.addEventListener('fetch', e => {
 	const req = e.request;
 	if (req.method !== 'GET') return;
-	const u = new URL(req.url), same = u.origin === location.origin, isJson = /\.json$/i.test(u.pathname);
-	if (same || isJson) e.respondWith(networkFirst(req, isJson ? DATA : SHELL, isJson ? 6000 : 4000));
+	const u = new URL(req.url), same = u.origin === location.origin;
+	// data = any .json file, or ANY request the page makes with fetch() to another site (e.g. a gist ".../raw" address with no .json in it)
+	const isData = /\.json$/i.test(u.pathname) || (!same && req.destination === '');
+	if (same || isData) e.respondWith(networkFirst(req, isData ? DATA : SHELL, isData ? 6000 : 4000));
 	else if (req.destination === 'image') e.respondWith(imageFirst(req));
 });
