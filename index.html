@@ -1,4 +1,4 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Yu-Gi-Eloh!</title><link rel=icon href="favicon.ico"><link rel=stylesheet href=style.css></head><body class=nosel>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Yu-Gi-Eloh!</title><link rel=manifest href="manifest.webmanifest"><meta name=theme-color content="#3a3fd1"><link rel=apple-touch-icon href="icons/icon-192.png"><meta name=mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-capable content=yes><link rel=icon href="favicon.ico"><link rel=stylesheet href=style.css></head><body class=nosel>
 <header><a href="#/"><img class=logo src="logo.png" alt="Yu-Gi-Eloh!"></a><nav><a href="#/">Leaderboard</a><a href="#/events">Events</a><a href="#/winners">Format Winners</a></nav></header>
 <main id=app>Loading…</main>
 <script src=lib.js?v=2></script>
@@ -139,8 +139,9 @@ const winners=()=>{const today=new Date().toISOString().slice(0,10),done=periodL
   return L.filter(x=>Math.round(x.elo)===top).map(x=>`<a class=wcard href="#/player/${x.id}"><span class=wframe>${av(x)}</span><span class=wplate><small>${esc(periodLabel(p))} winner</small><b>${esc(x.name)}</b><span class=welo>Elo ${top}</span></span></a>`)});
  return `<h2>Format Winners</h2>`+(cards.length?`<div class=wgrid>${cards.join('')}</div>`:'<div class=card>No formats have finished yet.</div>')};
 function view(){const[,pg,id]=location.hash.split('/');
- $('#app').innerHTML=(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
+ $('#app').innerHTML=(OFFLINE_SINCE?`<div class="card offline">You're offline. Showing the data last saved on this device${OFFLINE_SINCE>1?` (${fmtDate(new Date(OFFLINE_SINCE).toISOString().slice(0,10))})`:''}.</div>`:'')+(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load '+DATA_URL+' ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
 // table controls (delegated): search box, column headers, paging, rows per page, mobile sort menu
