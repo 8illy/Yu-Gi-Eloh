@@ -141,7 +141,7 @@ const winners=()=>{const today=new Date().toISOString().slice(0,10),done=periodL
 function view(){const[,pg,id]=location.hash.split('/');
  $('#app').innerHTML=(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
-loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load data/data.json ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
+loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent='Could not load '+DATA_URL+' ('+e.message+'). Serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
 // table controls (delegated): search box, column headers, paging, rows per page, mobile sort menu
 const dtOf=el=>{const w=el.closest&&el.closest('.dt');return w&&w.dataset.t};

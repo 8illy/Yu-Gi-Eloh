@@ -4,19 +4,21 @@ const CFG={start:1500,pts:3,K:32,kNew:48,newN:10,dl:'draw',byeAvatar:'39526584',
 // Copies config.json settings into CFG
 function applySettings(s={}){
  const m={startRating:'start',winPoints:'pts',kFactor:'K',kFactorProvisional:'kNew',provisionalMatches:'newN',doubleLoss:'dl',byeAvatar:'byeAvatar',newPlayerAvatar:'newPlayerAvatar',guestIdPrefix:'guestPrefix'};
+ if(s.dataUrl)DATA_URL=s.dataUrl;
  for(const k in m)if(s[k]!=null)CFG[m[k]]=s[k];
  if(s.avatarUrl)CFG.avatar=a=>s.avatarUrl.replace('{id}',encodeURIComponent(a));
 }
 const RESULTS=['p1','p2','dl','bye'];
 // Where the files live. Point DATA_URL at another host (a full https URL) to move the data elsewhere.
-const DATA_URL='data/data.json',CONFIG_URL='data/config.json';
-const fetchText=async(base,url)=>{const r=await fetch((/^https?:/.test(url)?'':base)+url+'?t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(url+': HTTP '+r.status);return r.text()};
+let DATA_URL='data/data.json';const CONFIG_URL='data/config.json';   // DATA_URL is overridden by config.json -> settings.dataUrl
+const fetchText=async(base,url)=>{const r=await fetch((/^https?:/.test(url)?'':base)+url+(url.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error(url+': HTTP '+r.status);return r.text()};
 let CONFIG_ERROR='';   // set when config.json can't be loaded or parsed, so the pages can say so instead of silently using defaults
 const loadConfig=async base=>{let c={};CONFIG_ERROR='';
  try{c=JSON.parse(await fetchText(base,CONFIG_URL))}
  catch(e){CONFIG_ERROR=`${CONFIG_URL} could not be used (${e.message}). The built-in defaults are being used instead.`;console.error(CONFIG_ERROR)}
  applySettings(c.settings);return c};
-async function loadData(base=''){const[d,c]=await Promise.all([fetchText(base,DATA_URL),loadConfig(base)]);return resolveView(normIds({...JSON.parse(d),settings:c.settings,trophies:c.trophies}))}
+// config.json is read first because it says where the data file lives (settings.dataUrl)
+async function loadData(base=''){const c=await loadConfig(base),d=await fetchText(base,DATA_URL);return resolveView(normIds({...JSON.parse(d),settings:c.settings,trophies:c.trophies}))}
 // one line per user/event so git diffs stay readable
 // Serialises ONLY the data file (periods, users, events); config.json is never written by the admin pages.
 const fmt=(d,e=d.events)=>{const L=a=>(a||[]).map(x=>JSON.stringify(x)).join(',\n');

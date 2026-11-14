@@ -1,5 +1,6 @@
 {
  "settings": {
+  "dataUrl": "data/data.json",
   "dateFormat": "D MMM YY",
   "startRating": 1500,
   "winPoints": 3,
