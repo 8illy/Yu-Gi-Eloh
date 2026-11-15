@@ -1,98 +1,403 @@
 {
- "settings": {
-  "dateFormat": "D MMM YY",
-  "startRating": 1500,
-  "winPoints": 3,
-  "kFactor": 24,
-  "kFactorProvisional": 40,
-  "provisionalMatches": 12,
-  "doubleLoss": "draw",
-  "avatarUrl": "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
-  "byeAvatar": "39526584",
-  "newPlayerAvatar": "38723936",
-  "guestIdPrefix" : "9900",
-  "dataUrl": "https://gist.githubusercontent.com/8illy/59a0c988906d9c89f530d4ea21f6c363/raw"
- },
-  "trophies": {
-  "matchWinMilestones": [
-   1,
-   10,
-   50,
-   100,
-   250,
-   500
-  ],
-  "eventWinMilestones": [
-   1,
-   5,
-   10,
-   25,
-   50,
-   100
-  ],
-  "eloMilestones": [
-   1550,
-   1600,
-   1700,
-   1800,
-   1900,
-   2000
-  ],
-    "beatMedals": [
-   {
-    "player": "0313050167",
-    "image": "images/beat-medal.png"
-   }
-  ],
-  "medalColors": {
-   "gold": {
-    "highlight": "#fff1a8",
-    "base": "#e0b13a",
-    "shadow": "#8a6410",
-    "ink": "#4a3200"
-   },
-   "silver": {
-    "highlight": "#ffffff",
-    "base": "#b9c0cf",
-    "shadow": "#6b7388",
-    "ink": "#2e3546"
-   },
-   "bronze": {
-    "highlight": "#f6c9a0",
-    "base": "#c07a48",
-    "shadow": "#6b3a1a",
-    "ink": "#3a1e0a"
-   }
+  "settings": {
+    "dateFormat": "D MMM YY",
+    "startRating": 1500,
+    "winPoints": 3,
+    "kFactor": 24,
+    "kFactorProvisional": 40,
+    "provisionalMatches": 12,
+    "doubleLoss": "draw",
+    "avatarUrl": "https://images.ygoprodeck.com/images/cards_cropped/{id}.jpg",
+    "byeAvatar": "39526584",
+    "newPlayerAvatar": "38723936",
+    "guestIdPrefix": "9900",
+    "dataUrl": "https://gist.githubusercontent.com/8illy/59a0c988906d9c89f530d4ea21f6c363/raw"
   },
-  "ribbonColors": {
-   "rank": {
-    "left": "#4aa3cf",
-    "right": "#2f7ea8"
-   },
-   "most": {
-    "left": "#d9556a",
-    "right": "#a8364a"
-   },
-   "match": {
-    "left": "#4cbf86",
-    "right": "#2f8f62"
-   },
-   "event": {
-    "left": "#9b6bd6",
-    "right": "#6e43a8"
-   },
-   "mostmatch": {
-    "left": "#f08a3c",
-    "right": "#c4621c"
-   },
-   "elo": {
-    "left": "#2fb8b0",
-    "right": "#1f8a84"
-   },
-   "beat": {
-    "left": "#792dc1",
-    "right": "#5a1f94"
-   }
-  }
- }
+ "trophies": {
+  "palettes": {
+    "gold": {
+      "highlight": "#fff1a8",
+      "base": "#e0b13a",
+      "shadow": "#8a6410",
+      "ink": "#4a3200"
+    },
+    "silver": {
+      "highlight": "#ffffff",
+      "base": "#b9c0cf",
+      "shadow": "#6b7388",
+      "ink": "#2e3546"
+    },
+    "bronze": {
+      "highlight": "#f6c9a0",
+      "base": "#c07a48",
+      "shadow": "#6b3a1a",
+      "ink": "#3a1e0a"
+    },
+    "sapphire": {
+      "highlight": "#cfe3ff",
+      "base": "#3f7be0",
+      "shadow": "#1b3f8a",
+      "ink": "#0a1e4a"
+    },
+    "obsidian": {
+      "highlight": "#9aa0b5",
+      "base": "#3a3f55",
+      "shadow": "#14172a",
+      "ink": "#e9ecf8"
+    }
+  },
+  "ribbons": {
+    "split-blue": {
+      "design": "split",
+      "left": "#4aa3cf",
+      "right": "#2f7ea8"
+    },
+    "split-rose": {
+      "design": "split",
+      "left": "#d9556a",
+      "right": "#a8364a"
+    },
+    "split-green": {
+      "design": "split",
+      "left": "#4cbf86",
+      "right": "#2f8f62"
+    },
+    "split-lavender": {
+      "design": "split",
+      "left": "#9b6bd6",
+      "right": "#6e43a8"
+    },
+    "split-orange": {
+      "design": "split",
+      "left": "#f08a3c",
+      "right": "#c4621c"
+    },
+    "split-teal": {
+      "design": "split",
+      "left": "#2fb8b0",
+      "right": "#1f8a84"
+    },
+    "split-purple": {
+      "design": "split",
+      "left": "#792dc1",
+      "right": "#5a1f94"
+    },
+    "striped-navy-gold": {
+      "design": "striped",
+      "left": "#1b3f8a",
+      "right": "#14306b",
+      "accent": "#ffd34d"
+    },
+    "solid-red": {
+      "design": "solid",
+      "color": "#c0392b"
+    }
+  },
+  "styles": {
+    "darkcrest": {
+      "shape": "hexagon",
+      "palette": "obsidian",
+      "ribbon": {
+        "design": "solid",
+        "color": "#2b2f45"
+      }
+    }
+  },
+  "shapes": {
+    "diamond": {
+      "outer": "M50 38L92 86L50 134L8 86Z",
+      "inner": "M50 50L80 86L50 122L20 86Z",
+      "face": {
+        "cx": 50,
+        "cy": 86,
+        "r": 22
+      }
+    }
+  },
+  "icons": {
+    "flame": "<path d=\"M50 58C60 70 68 78 62 92C59 99 54 102 50 102C44 102 38 98 38 90C38 82 46 78 44 68C48 70 50 64 50 58Z\" fill=\"{ink}\"/><path d=\"M50 80C54 86 56 90 52 96C51 98 49 98 48 96C45 92 47 86 50 80Z\" fill=\"{highlight}\"/>"
+  },
+  "defs": [
+    {
+      "id": "win-streak",
+      "title": "{value} match wins in a row",
+      "description": "{value} match wins in a row",
+      "earn": {
+        "type": "milestone",
+        "stat": "winStreak",
+        "levels": [
+          5,
+          10,
+          15,
+          20
+        ]
+      },
+      "look": {
+        "shape": "octagon",
+        "tiers": [
+          "bronze",
+          "silver",
+          "gold",
+          "platinum"
+        ],
+        "inner": {
+          "type": "icon",
+          "name": "bolt"
+        },
+        "plate": "{value}",
+        "ribbon": {
+          "design": "striped",
+          "left": "#e8c11c",
+          "right": "#b8920a",
+          "accent": "#222"
+        }
+      }
+    },
+    {
+      "id": "top-3-hunter",
+      "title": "Top-3 finishes [{value}]",
+      "description": "Top-3 finishes at events",
+      "earn": {
+        "type": "milestone",
+        "stat": "podiums",
+        "levels": [
+          10,
+          50,
+          100,
+          250
+        ]
+      },
+      "look": {
+        "style": "darkcrest",
+        "palette": [
+          "bronze",
+          "silver",
+          "gold",
+          "platinum"
+        ],
+        "inner": [
+          {
+            "type": "icon",
+            "name": "cup"
+          }
+        ],
+        "plate": "{value}"
+      }
+    },
+    {
+      "id": "bye-lucky",
+      "title": "Received a bye  [{value}]",
+      "description": "Received a bye",
+      "earn": {
+        "type": "milestone",
+        "stat": "byes",
+        "levels": [
+          1,
+          5,
+          10,
+          25,
+          50
+        ]
+      },
+      "look": {
+        "shape": "circle",
+        "palette": [
+          "bronze",
+          "silver",
+          "gold",
+          "platinum"
+        ],
+        "inner": {
+          "type": "text",
+          "text": "BYE",
+          "size": 22
+        },
+        "plate": "{value}",
+        "ribbon": "split-rose",
+        "gloss": false
+      }
+    },
+    {
+      "id": "format-rank",
+      "title": "#{rank} {format}",
+      "description": "Finished in the top 3 of a finished format",
+      "earn": {
+        "type": "periodRank",
+        "ranks": [
+          1,
+          2,
+          3
+        ]
+      },
+      "look": {
+        "shape": "circle",
+        "palette": [
+          "gold",
+          "silver",
+          "bronze"
+        ],
+        "inner": [
+          {
+            "type": "icon",
+            "name": "laurel"
+          },
+          {
+            "type": "text",
+            "text": "{value}"
+          }
+        ],
+        "ribbon": "split-blue"
+      }
+    },
+    {
+      "id": "format-event-wins",
+      "title": "Most event wins {format}",
+      "description": "Won the most events in a finished format",
+      "earn": {
+        "type": "periodLeader",
+        "stat": "eventWins"
+      },
+      "look": {
+        "shape": "shield",
+        "palette": "gold",
+        "inner": {
+          "type": "icon",
+          "name": "star"
+        },
+        "plate": "{value}",
+        "ribbon": "split-rose"
+      }
+    },
+    {
+      "id": "format-match-wins",
+      "title": "Most match wins {format}",
+      "description": "Won the most matches in a finished format",
+      "earn": {
+        "type": "periodLeader",
+        "stat": "matchWins"
+      },
+      "look": {
+        "shape": "seal",
+        "palette": "gold",
+        "inner": {
+          "type": "icon",
+          "name": "swords"
+        },
+        "plate": "{value}",
+        "ribbon": "split-orange"
+      }
+    },
+    {
+      "id": "match-wins",
+      "title": "Match wins [{value}]",
+      "description": "Total match wins, all time",
+      "earn": {
+        "type": "milestone",
+        "stat": "matchWins",
+        "levels": [
+          1,
+          10,
+          50,
+          100,
+          250,
+          500
+        ]
+      },
+      "look": {
+        "shape": "circle",
+        "tiers": [
+          "bronze",
+          "silver",
+          "gold"
+        ],
+        "inner": {
+          "type": "icon",
+          "name": "cards"
+        },
+        "plate": "{value}",
+        "ribbon": "split-green"
+      }
+    },
+    {
+      "id": "event-wins",
+      "title": "Event wins [{value}]",
+      "description": "Total event wins, all time",
+      "earn": {
+        "type": "milestone",
+        "stat": "eventWins",
+        "levels": [
+          1,
+          5,
+          10,
+          25,
+          50,
+          100
+        ]
+      },
+      "look": {
+        "shape": "hexagon",
+        "tiers": [
+          "bronze",
+          "silver",
+          "gold"
+        ],
+        "inner": {
+          "type": "icon",
+          "name": "cup"
+        },
+        "plate": "{value}",
+        "ribbon": "split-lavender"
+      }
+    },
+    {
+      "id": "beat-0313050167",
+      "title": "Beat {player}",
+      "description": "Beat {player} in a match",
+      "earn": {
+        "type": "beat",
+        "player": "0313050167"
+      },
+      "look": {
+        "shape": "ring",
+        "palette": "gold",
+        "inner": {
+          "type": "image",
+          "src": "images/beat-medal.png"
+        },
+        "ribbon": "split-purple"
+      }
+    },
+    {
+      "id": "elo",
+      "title": "Reached {value} Elo",
+      "description": "Highest Elo reached in any single format",
+      "earn": {
+        "type": "milestone",
+        "stat": "elo",
+        "levels": [
+          1550,
+          1600,
+          1700,
+          1800,
+          1900,
+          2000
+        ]
+      },
+      "look": {
+        "shape": "octagon",
+        "tiers": [
+          "bronze",
+          "silver",
+          "gold"
+        ],
+        "inner": {
+          "type": "icon",
+          "name": "arrow"
+        },
+        "plate": "{value}",
+        "ribbon": "split-teal"
+      }
+    }
+  ]
+}
 }

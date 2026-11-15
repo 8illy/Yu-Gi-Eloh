@@ -1,10 +1,10 @@
 // Service worker: lets the site install as an app and keep working offline.
 // Everything is "network first": online you always get the latest files and data, and each response is saved.
 // Offline (or if the network is very slow) the last saved copy is used, including the latest config.json / data.json.
-const VER = 'v2', SHELL = 'shell-' + VER, DATA = 'data-' + VER, IMG = 'img-' + VER;
-const PRECACHE = ['./', 'index.html', 'lib.js', 'style.css', 'manifest.webmanifest', 'favicon.ico', 'logo.png',
+const VER = 'v3', SHELL = 'shell-' + VER, DATA = 'data-' + VER, IMG = 'img-' + VER;
+const PRECACHE = ['./', 'index.html', 'lib.js', 'trophies.js', 'style.css', 'manifest.webmanifest', 'favicon.ico', 'logo.png',
                   'icons/icon-192.png', 'icons/icon-512.png', 'images/beat-medal.png'];
-const MAX_IMAGES = 500;
+const MAX_IMAGES = 500;   // lower than before: browsers count every cross-origin (opaque) image as several MB against the storage quota, whatever its real size
 
 // cache key = the URL without the ?t= cache-buster the page adds to every request
 const key = u => { const x = new URL(u, location.href); x.searchParams.delete('t'); return x.href; };
@@ -53,15 +53,19 @@ async function networkFirst(req, name, ms) {
 	}
 }
 
-// avatars (other site): cache first. Asked for with CORS so the copy is small; if that is refused, just pass through.
+// avatars (other site): cache first. The image host sends no CORS headers, so the image is fetched exactly as an <img> tag does
+// (no-cors) and the opaque response is saved. Asking with mode:'cors' only ever produced a console error before falling back.
 async function imageFirst(req) {
 	const cache = await caches.open(IMG), hit = await cache.match(req.url);
 	if (hit) return hit;
 	try {
-		const res = await fetch(req.url, { mode: 'cors' });
-		if (res.ok) { await cache.put(req.url, res.clone()); const ks = await cache.keys(); if (ks.length > MAX_IMAGES) await cache.delete(ks[0]); }
+		const res = await fetch(req);
+		if (res.ok || res.type === 'opaque') {
+			await cache.put(req.url, res.clone());
+			const ks = await cache.keys(); if (ks.length > MAX_IMAGES) await cache.delete(ks[0]);
+		}
 		return res;
-	} catch { return fetch(req); }
+	} catch { return Response.error(); }
 }
 
 self.addEventListener('fetch', e => {
