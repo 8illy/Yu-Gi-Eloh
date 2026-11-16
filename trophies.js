@@ -63,6 +63,7 @@ const T_ICONS={
  star:c=>`<polygon points="${T_star}" fill="${c.t}"/>`,
  arrow:c=>`<polyline points="30,98 44,82 54,90 70,66" fill="none" stroke="${c.t}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polygon points="77,55 75.8,69.9 64.2,62.1" fill="${c.t}"/>`,
  swords:c=>`<g stroke="${c.t}" stroke-linecap="round" fill="none"><path d="M36 64L64 98M64 64L36 98" stroke-width="5"/><path d="M51.6 94.5L62.4 85.5M48.4 94.5L37.6 85.5" stroke-width="4"/></g><circle cx="64" cy="98" r="3.5" fill="${c.t}"/><circle cx="36" cy="98" r="3.5" fill="${c.t}"/>`,
+ arrowdown:c=>`<polyline points="30,66 44,82 54,74 70,98" fill="none" stroke="${c.t}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><polygon points="77,109 75.8,94.1 64.2,101.9" fill="${c.t}"/>`,
  cards:c=>T_card(c,-24)+T_card(c,0)+T_card(c,24),
  cup:c=>`<path d="M37 60h26v12c0 9-5.5 15-13 15s-13-6-13-15z" fill="${c.t}"/><path d="M37 64c-8 0-9 10 0 12M63 64c8 0 9 10 0 12" fill="none" stroke="${c.t}" stroke-width="3"/><rect x="47" y="87" width="6" height="7" fill="${c.t}"/><rect x="40" y="94" width="20" height="5" rx="2" fill="${c.t}"/>`,
  crown:c=>`<path d="M32 92L30 64L42 76L50 60L58 76L70 64L68 92Z" fill="${c.t}"/><rect x="32" y="94" width="36" height="5" rx="2" fill="${c.t}"/>`,
@@ -142,7 +143,11 @@ function T_medal(look,TR,hit){
   (look.gloss?'<ellipse cx="36" cy="62" rx="15" ry="7" fill="#fff" opacity=".2" transform="rotate(-30 36 62)"/>':'')+'</svg>'}
 
 // ---------- stats ----------
-const T_LABEL={matchWins:'Match wins',matches:'Matches played',byes:'Byes',events:'Events played',eventWins:'Event wins',podiums:'Podium finishes',winStreak:'Win streak',elo:'Elo'};
+const T_LABEL={matchWins:'Match wins',matches:'Matches played',byes:'Byes',events:'Events played',eventWins:'Event wins',podiums:'Podium finishes',winStreak:'Win streak',loseStreak:'Loss streak',eventWinStreak:'Event win streak',eloGain:'Elo gained in one event',eloLoss:'Elo lost in one event',elo:'Elo'};
+// Net Elo change per event for one player, oldest first: [{id, d, delta}] (events that were not rated are left out)
+const T_evElo=(id,X)=>X.once('evElo|'+id,()=>{const m=new Map();
+ X.EP.forEach(L=>L.forEach(x=>{const c=x.p1===id?x.d1:x.p2===id?x.d2:undefined;if(c==null)return;const e=m.get(x.event)||{id:x.event,d:x.date,delta:0};e.delta+=c;m.set(x.event,e)}));
+ return[...m.values()].map(e=>({...e,delta:Math.round(e.delta)})).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0)});
 const T_cnt=a=>a.map((d,i)=>({d,v:i+1}));
 const T_won=(m,id)=>(m.result==='p1'&&m.p1===id)||(m.result==='p2'&&m.p2===id);
 // Series stats: a chronological list of {d: date, v: value reached}. A milestone level is reached on the first date v >= level.
@@ -154,6 +159,13 @@ const T_STAT={
  eventWins:(id,X)=>T_cnt(X.SA.events.filter(e=>e.standings.some(s=>s.p===id&&s.r===1)).map(e=>e.date)),
  podiums:(id,X)=>T_cnt(X.SA.events.filter(e=>e.standings.some(s=>s.p===id&&s.r<=3)).map(e=>e.date)),
  winStreak:(id,X)=>{let s=0;const o=[];X.SA.matches.forEach(m=>{if(m.result==='bye'||(m.p1!==id&&m.p2!==id))return;if(T_won(m,id)){s++;o.push({d:m.date,v:s})}else s=0});return o},
+ // consecutive match losses; byes are ignored (they neither add to nor break it). A double loss counts as a loss for both players.
+ loseStreak:(id,X)=>{let s=0;const o=[];X.SA.matches.forEach(m=>{if(m.result==='bye'||(m.p1!==id&&m.p2!==id))return;if(T_won(m,id))s=0;else{s++;o.push({d:m.date,v:s})}});return o},
+ // consecutive events won, counting only events the player took part in (missing an event does not break it; any other placing does)
+ eventWinStreak:(id,X)=>{let s=0;const o=[];X.SA.events.forEach(e=>{const st=e.standings.find(x=>x.p===id);if(!st)return;if(st.r===1){s++;o.push({d:e.date,v:s})}else s=0});return o},
+ // biggest Elo gained / lost across the matches of ONE event (Elo as calculated within its format)
+ eloGain:(id,X)=>T_evElo(id,X).map(e=>({d:e.d,v:e.delta})),
+ eloLoss:(id,X)=>T_evElo(id,X).map(e=>({d:e.d,v:-e.delta})),
  // highest rating reached in any single format (the rating after each match)
  elo:(id,X)=>X.EP.flatMap(L=>L.flatMap(m=>{const r=m.p1===id?m.r1:m.p2===id?m.r2:null;return r==null?[]:[{d:m.date,v:Math.round(r)}]})).sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0)};
 // Per-format stats, for "most X in a format" trophies
@@ -186,16 +198,18 @@ const T_EARN={
    const o=X.SA.P[bp],v={player:o?o.name:'#'+bp,avatar:o&&o.avatar!=null?CFG.avatar(o.avatar):''};
    return[{d:w.date,idx:i,n:e.players.length,value:T_tpl(e.value||'',v),vars:v}]})},
  eventResult:{   // a result at a single event: placing, unbeaten, minimum wins, minimum field size
-  prep:e=>{['rank','maxRank','minPlayers','minWins'].forEach(k=>{if(e[k]!=null&&!Number.isFinite(e[k]))throw Error(`earn.${k} must be a number`)});
-   if(e.rank==null&&e.maxRank==null&&e.minPlayers==null&&e.minWins==null&&!e.unbeaten)throw Error('eventResult needs at least one of: rank, maxRank, minPlayers, minWins, unbeaten');
+  prep:e=>{['rank','maxRank','minPlayers','minWins','minEloGain','minEloLoss'].forEach(k=>{if(e[k]!=null&&!Number.isFinite(e[k]))throw Error(`earn.${k} must be a number`)});
+   if(e.rank==null&&e.maxRank==null&&e.minPlayers==null&&e.minWins==null&&e.minEloGain==null&&e.minEloLoss==null&&!e.unbeaten)throw Error('eventResult needs at least one of: rank, maxRank, minPlayers, minWins, unbeaten, minEloGain, minEloLoss');
    return{...e,show:e.show==='all'?'all':'first'}},
   run:(e,id,X)=>{const ok=[];
    X.SA.events.forEach(ev=>{const s=ev.standings.find(s=>s.p===id);if(!s)return;
     if(e.rank!=null&&s.r!==e.rank)return;if(e.maxRank!=null&&s.r>e.maxRank)return;if(e.minPlayers!=null&&ev.standings.length<e.minPlayers)return;
+    const ch=(X.evElo(id).find(x=>x.id===ev.id)||{}).delta;
+    if(e.minEloGain!=null&&!(ch>=e.minEloGain))return;if(e.minEloLoss!=null&&!(-ch>=e.minEloLoss))return;
     if(e.unbeaten||e.minWins!=null){const ms=X.SA.matches.filter(m=>m.event===ev.id&&m.result!=='bye'&&(m.p1===id||m.p2===id)),w=ms.filter(m=>T_won(m,id)).length;
      if(e.unbeaten&&w<ms.length)return;if(w<(e.minWins??1))return}
-    ok.push(ev)});
-   const mk=(ev,i)=>({d:ev.date,idx:0,n:1,value:T_tpl(e.value||'',{}),vars:{event:evName(ev),count:ok.length}});
+    ok.push({ev,ch})});
+   const mk=({ev,ch})=>({d:ev.date,idx:0,n:1,value:T_tpl(e.value||'',{}),vars:{event:evName(ev),count:ok.length,change:ch==null?'':(ch>0?'+':'')+ch}});
    return e.show==='all'?ok.map(mk):ok.slice(0,1).map(mk)}}};
 
 // ---------- loading config ----------
@@ -241,7 +255,7 @@ function calcPT(){
   return{p,L,rk:Object.fromEntries(L.map(x=>[x.id,1+L.filter(y=>Math.round(y.elo)>Math.round(x.elo)).length]))}})}
 function trophies(id){
  if(!TR)return[];
- const memo={},X={SA,EP,PT,series:(s,i)=>memo[s+'|'+i]??=T_STAT[s](i,X)},out=[];
+ const memo={},X={SA,EP,PT,once:(k,f)=>memo[k]??=f(),evElo:i=>T_evElo(i,X),series:(s,i)=>X.once(s+'|'+i,()=>T_STAT[s](i,X))},out=[];
  TR.defs.forEach(def=>{let hits;
   try{hits=T_EARN[def.earn.type].run(def.earn,id,X)}catch(e){console.error('trophy '+def.id,e);return}
   hits.forEach(h=>{const v={...h.vars,value:h.value,date:fmtDate(h.d)};

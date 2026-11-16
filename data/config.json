@@ -152,6 +152,41 @@
           "accent": "#222"
         }
       }
+    },    
+	{
+      "id": "lose-streak",
+      "title": "{value} match losses in a row",
+      "description": "{value} match losses in a row",
+      "earn": {
+        "type": "milestone",
+        "stat": "loseStreak",
+        "levels": [
+          4,
+          10,
+          20,
+		  50
+        ]
+      },
+      "look": {
+        "shape": "octagon",
+        "tiers": [
+          "bronze",
+          "silver",
+          "gold",
+          "platinum"
+        ],
+        "inner": {
+          "type": "icon",
+          "name": "arrowdown"
+        },
+        "plate": "{value}",
+        "ribbon": {
+          "design": "striped",
+          "left": "#e8c11c",
+          "right": "#b8920a",
+          "accent": "#222"
+        }
+      }
     },
     {
       "id": "top-3-hunter",
@@ -365,6 +400,37 @@
           "src": "images/beat-medal.png"
         },
         "ribbon": "split-purple"
+      }
+    },
+	{
+      "id": "fallenEloLost",
+      "title": "The Fallen",
+      "description": "Lost 50 ELO in a single Event",
+        "earn": { "type": "milestone", "stat": "eloLoss", "levels": [60] },
+      "look": {
+		      "plate": "-{value}",
+        "shape": "ring",
+        "palette": "obsidian",
+        "inner": {
+          "type": "image",
+          "src": "images/fallen.png"
+        },
+        "ribbon": "split-rose"
+      }
+    },{
+      "id": "virtuousEloGain",
+      "title": "The Virtuous",
+      "description": "Gained 50 ELO in a single Event",
+        "earn": { "type": "milestone", "stat": "eloGain", "levels": [60] },
+      "look": {
+		      "plate": "{value}",
+        "shape": "ring",
+        "palette": "platinum",
+        "inner": {
+          "type": "image",
+          "src": "images/virtuous.png"
+        },
+        "ribbon": "split-blue"
       }
     },
     {
