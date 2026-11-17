@@ -1,16 +1,23 @@
-<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Yu-Gi-Eloh!</title><link rel=manifest href="manifest.webmanifest"><meta name=theme-color content="#151e2f"><link rel=apple-touch-icon href="icons/icon-192.png"><meta name=mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-capable content=yes><link rel=icon href="favicon.ico"><link rel=stylesheet href=style.css></head><body class=nosel>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Yu-Gi-Eloh!</title><link rel=manifest href="manifest.webmanifest"><meta name=theme-color content="#151e2f"><link rel=apple-touch-icon href="icons/icon-192.png"><meta name=mobile-web-app-capable content=yes><meta name=apple-mobile-web-app-capable content=yes><link rel=icon href="favicon.ico"><link rel=stylesheet href=style.css><style>@media(max-width:600px){.row.selbar{flex-direction:column;align-items:flex-end}.selbar .seg{order:-1}.selbar .dr{order:1}}.seg{display:inline-flex;border:1px solid rgba(255,255,255,.28);border-radius:8px;overflow:hidden}.seg button{background:transparent;color:inherit;border:0;border-radius:0;padding:.35em .75em;font:inherit;cursor:pointer;opacity:.65}.seg button[aria-pressed=true]{opacity:1;background:rgba(255,255,255,.16);font-weight:600}</style></head><body class=nosel>
 <header><a href="#/"><img class=logo src="logo.png" alt="Yu-Gi-Eloh!"></a><nav><a href="#/">Leaderboard</a><a href="#/events">Events</a><a href="#/winners">Format Winners</a></nav></header>
 <main id=app>Loading…</main>
 <script src=lib.js?v=2></script>
 <script src=trophies.js?v=1></script>
 <script>
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
-let D,S,SA,PER,PV;
+let D,S,SA,PER,PV,PMODE='periods';   // PMODE: the Format list shows the ranking periods from data.json ('periods') or calendar months ('months')
 // "Custom" format: the person picks a start and end date
 const CUS={start:'',end:''};
 const customDefaults=()=>{const ds=D.events.map(e=>e.date).sort();return{start:ds[0]||'',end:ds.at(-1)||''}};
 const customPer=()=>({name:'Custom',start:CUS.start||customDefaults().start,end:CUS.end});
-const calc=()=>{const per=PER==='all'?null:PER==='custom'?customPer():periodList(D).find(p=>p.start===PER);S=derive(D,per);
+// Calendar months, as ranking periods: one for every month that has at least one event, newest first. Elo starts fresh each month, like any format.
+const MP=ym=>{const[y,m]=ym.split('-').map(Number),end=`${ym}-${String(new Date(Date.UTC(y,m,0)).getUTCDate()).padStart(2,'0')}`;
+ return{name:fmtDate(ym+'-01','MMM YYYY'),start:ym+'-01',end,month:true,live:end>=new Date().toISOString().slice(0,10)}};
+const monthList=()=>[...new Set(D.events.map(e=>e.date.slice(0,7)))].sort().reverse().map(MP);
+const perList=()=>PMODE==='months'?monthList():periodList(D);
+const perKey=p=>p.month?'m:'+p.start.slice(0,7):p.start;      // the value used in the Format list ("m:2026-01" for a month)
+const perOf=k=>k==='all'?null:k==='custom'?customPer():/^m:/.test(k)?MP(k.slice(2)):periodList(D).find(p=>p.start===k);
+const calc=()=>{const per=perOf(PER);S=derive(D,per);
  // snapshot before the most recent event in this view, to show rank / Elo changes
  const last=S.events.at(-1);PV=last&&S.events.length>1&&!(per&&per.end&&per.end<new Date().toISOString().slice(0,10))?derive({...D,events:D.events.filter(e=>e.id!==last.id)},per):null};
 // highest rating reached in this view (the starting rating counts)
@@ -22,7 +29,8 @@ const dvFor=e=>{const has=periodList(D).length,p=has?periodFor(D,e.date):null;if
 const chg=(d,txt)=>d?` <small class=${d>0?'up':'dn'}>${txt}</small>`:'';
 const dRank=(id,i)=>{if(!PV)return'';const j=PV.list.findIndex(x=>x.id===id);return j<0?' <small class=up>new</small>':chg(j-i,(j>i?'▲':'▼')+Math.abs(j-i))};
 const dElo=p=>{if(!PV)return'';const q=PV.P[p.id];if(!q||!PV.list.includes(q))return'';const d=Math.round(p.elo-q.elo);return chg(d,(d>0?'+':'')+d)};
-const sel=()=>`<div class=row style="justify-content:flex-end">${PER==='custom'?`<label>From <input type=date id=cs value="${CUS.start}" max="${CUS.end}"></label><label>to <input type=date id=ce value="${CUS.end}" min="${CUS.start}"></label>`:''}<label>Format <select id=per><option value=all${PER==='all'?' selected':''}>All time</option>${periodList(D).map(p=>`<option value="${esc(p.start)}"${PER===p.start?' selected':''}>${esc(periodLabel(p))}</option>`).join('')}<option value=custom${PER==='custom'?' selected':''}>Custom</option></select></label></div>`;
+const modeToggle=()=>`<span class=seg role=group aria-label="Format list">${[['periods','Format'],['months','Month']].map(([k,t])=>`<button type=button data-pmode=${k} aria-pressed=${PMODE===k}>${t}</button>`).join('')}</span>`;
+const sel=()=>`<div class="row selbar" style="justify-content:flex-end">${PER==='custom'?`<label class=dr>From <input type=date id=cs value="${CUS.start}" max="${CUS.end}"></label><label class=dr>to <input type=date id=ce value="${CUS.end}" min="${CUS.start}"></label>`:''}<label>Format <select id=per><option value=all${PER==='all'?' selected':''}>All time</option>${perList().map(p=>`<option value="${esc(perKey(p))}"${PER===perKey(p)?' selected':''}>${esc(periodLabel(p))}</option>`).join('')}<option value=custom${PER==='custom'?' selected':''}>Custom</option></select></label>${modeToggle()}</div>`;
 const av=u=>`<img class=av src="${esc(CFG.avatar(u.avatar))}" alt="" onerror="this.style.visibility='hidden'">`;
 const pl=id=>{const p=S.P[id];return p?(p.guest?`<span class=pl>${av(p)}<span class=nm>${esc(p.name)}</span></span>`:`<a class=pl href="#/player/${id}">${av(p)}<span class=nm>${esc(p.name)}</span></a>`):'?'};
 const plr=id=>{const p=S.P[id];return p?(p.guest?`<span class="pl pr"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</span>`:`<a class="pl pr" href="#/player/${id}"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</a>`):'?'};
@@ -37,10 +45,10 @@ const tbl=(h,rows,l=1)=>`<table><tr>${h.map((x,i)=>`<th${i<l?'':' class=r'}>${x}
 const tot=h=>h.w+h.l+h.dl;
 
 // Leaderboard header: period name, dates (no end date = ongoing; "all time" starts at the first event) and totals
-const curPer=()=>PER==='all'?null:PER==='custom'?customPer():periodList(D).find(p=>p.start===PER);
+const curPer=()=>perOf(PER);
 const hdr=()=>{const p=curPer(),first=D.events.reduce((a,e)=>!a||e.date<a?e.date:a,null),start=p?p.start:first,
  st=(v,k)=>`<div><b>${v}</b><small>${k}</small></div>`;
- return `<div class=card><h2>${esc(p?periodLabel(p):'All time')}</h2><div class=stats><span class=g>${start?st(fmtDate(start),'start'):''}${p&&p.end?st(fmtDate(p.end),'end'):''}</span><span class=g>${st(S.events.length,'events')}${st(S.matches.filter(m=>m.result!=='bye').length,'matches')}${st(S.list.length,'players')}</span></div></div>`};
+ return `<div class=card><h2>${esc(p?periodLabel(p):'All time')}</h2><div class=stats><span class=g>${start?st(fmtDate(start),'start'):''}${p&&p.end&&!p.live?st(fmtDate(p.end),'end'):''}</span><span class=g>${st(S.events.length,'events')}${st(S.matches.filter(m=>m.result!=='bye').length,'matches')}${st(S.list.length,'players')}</span></div></div>`};
 const board=()=>sel()+hdr()+`<div class="card lb">${tbl(['#','Player','Elo','W–L','Win %','1st places','Events'],S.list.map((p,i)=>[`${i+1}${dRank(p.id,i)}`,pl(p.id),`${Math.round(p.elo)}${dElo(p)}`,wl(p),wr(p),p.firsts,p.events]),2)}</div>`;
 
 // Trophies live in trophies.js (configured in data/config.json -> trophies)
@@ -89,15 +97,15 @@ function dtDraw(id){const{cols,rows}=TB[id],st=TS[id],el=$(`.dt[data-t="${id}"] 
   `<div class=pager><span>${list.length} result${list.length==1?'':'s'}</span><span class=pg>`+
   `<button data-p=prev${st.page?'':' disabled'}>‹ Prev</button>Page ${st.page+1} of ${pages}<button data-p=next${st.page<pages-1?'':' disabled'}>Next ›</button>`+
   `<select class=dts aria-label="Rows per page">${sizes.map(n=>`<option${n==st.size?' selected':''}>${n}</option>`).join('')}</select></span></div>`}
-const winners=()=>{const today=new Date().toISOString().slice(0,10),done=periodList(D).filter(p=>p.end&&p.end<today);
- const cards=done.flatMap(p=>{const L=(dc[p.start]??=derive(D,p)).list;if(!L.length)return[];const top=Math.round(L[0].elo);
+const winners=()=>{const today=new Date().toISOString().slice(0,10),done=perList().filter(p=>p.end&&p.end<today);
+ const cards=done.flatMap(p=>{const L=(dc[perKey(p)]??=derive(D,p)).list;if(!L.length)return[];const top=Math.round(L[0].elo);
   return L.filter(x=>Math.round(x.elo)===top).map(x=>`<a class=wcard href="#/player/${x.id}"><span class=wframe>${av(x)}</span><span class=wplate><small>${esc(periodLabel(p))} winner</small><b>${esc(x.name)}</b><span class=welo>Elo ${top}</span></span></a>`)});
- return `<h2>Format Winners</h2>`+(cards.length?`<div class=wgrid>${cards.join('')}</div>`:'<div class=card>No formats have finished yet.</div>')};
+ return `<div class=row style="justify-content:space-between;align-items:center"><h2>Format Winners</h2>${modeToggle()}</div>`+(cards.length?`<div class=wgrid>${cards.join('')}</div>`:`<div class=card>No ${PMODE==='months'?'months':'formats'} have finished yet.</div>`)};
 function view(){const[,pg,id]=location.hash.split('/');
  $('#app').innerHTML=(OFFLINE_SINCE?`<div class="card offline">You're offline. Showing the data last saved on this device${OFFLINE_SINCE>1?` (${fmtDate(new Date(OFFLINE_SINCE).toISOString().slice(0,10))})`:''}.</div>`:'')+(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=periodList(d);PER=ps.length?ps[0].start:'all';calc();view()}).catch(e=>$('#app').textContent=navigator.onLine===false?"You're offline and this device has no saved copy of the data yet. Connect once, open the app, and it will work offline from then on.":'Could not load '+DATA_URL+' ('+e.message+'). If you are running the files locally, serve the folder over HTTP rather than opening the file directly.');
+loadData().then(d=>{D=d;SA=derive(d);calcPT();try{PMODE=localStorage.getItem('yge.pmode')==='months'?'months':'periods'}catch{}const ps=perList();PER=ps.length?perKey(ps[0]):'all';calc();view()}).catch(e=>$('#app').textContent=navigator.onLine===false?"You're offline and this device has no saved copy of the data yet. Connect once, open the app, and it will work offline from then on.":'Could not load '+DATA_URL+' ('+e.message+'). If you are running the files locally, serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
 // table controls (delegated): search box, column headers, paging, rows per page, mobile sort menu
 const dtOf=el=>{const w=el.closest&&el.closest('.dt');return w&&w.dataset.t};
@@ -108,5 +116,30 @@ document.addEventListener('click',e=>{const t=e.target,id=dtOf(t);if(!id)return;
 document.addEventListener('change',e=>{const t=e.target,id=dtOf(t);if(!id)return;const st=TS[id];
  if(t.classList.contains('dts')){st.size=+t.value;st.page=0;dtDraw(id)}
  else if(t.classList.contains('dtso')){const[j,d]=t.value.split(':');st.sort=+j;st.dir=+d;st.page=0;dtDraw(id)}});
-document.addEventListener('change',e=>{if(['per','cs','ce'].includes(e.target.id)){const o=[...document.querySelectorAll('#app details')].map(d=>d.open);{const t=e.target;if(t.id==='per'){PER=t.value;if(PER==='custom'&&!CUS.start)Object.assign(CUS,customDefaults())}else CUS[t.id==='cs'?'start':'end']=t.value}Object.keys(TS).forEach(k=>delete TS[k]);calc();view();document.querySelectorAll('#app details').forEach((d,i)=>d.open=!!o[i])}});
+// Format selector and custom date range. Typing into a date box must not redraw the page until the date is finished:
+// browsers fire "change" for every keystroke that forms a valid date (typing a year does it on each digit).
+// So edits made with the keyboard are applied on Enter or when the box loses focus; picking from the calendar applies at once.
+const isDateBox=t=>t&&(t.id==='cs'||t.id==='ce');
+const applyPeriodInput=(t,refocus)=>{
+ if(isDateBox(t)&&((t.validity&&t.validity.badInput)||t.value===CUS[t.id==='cs'?'start':'end']))return;   // half-typed date, or nothing changed
+ const o=[...document.querySelectorAll('#app details')].map(d=>d.open);
+ if(t.id==='per'){PER=t.value;if(PER==='custom'&&!CUS.start)Object.assign(CUS,customDefaults())}else CUS[t.id==='cs'?'start':'end']=t.value;
+ Object.keys(TS).forEach(k=>delete TS[k]);calc();view();
+ document.querySelectorAll('#app details').forEach((d,i)=>d.open=!!o[i]);
+ if(refocus){const n=document.getElementById(t.id);if(n)n.focus()}};
+document.addEventListener('keydown',e=>{const t=e.target;if(!isDateBox(t))return;
+ if(e.key==='Enter'){delete t.dataset.typing;applyPeriodInput(t,true)}
+ else if(e.key.length===1||['Backspace','Delete','ArrowUp','ArrowDown'].includes(e.key))t.dataset.typing=1});
+document.addEventListener('change',e=>{const t=e.target;if(!['per','cs','ce'].includes(t.id))return;if(isDateBox(t)&&t.dataset.typing)return;applyPeriodInput(t)});
+const setPMode=m=>{
+ if(m===PMODE)return;PMODE=m;try{localStorage.setItem('yge.pmode',m)}catch{}
+ if(PER!=='all'&&PER!=='custom'){   // keep roughly the same stretch of time: the month of the period's last event, or the period that month falls in
+  const cur=perOf(PER),ds=cur?D.events.map(e=>e.date).filter(d=>inPeriod(cur,d)).sort():[],last=ds.at(-1);
+  if(m==='months'){const ml=monthList();PER=last?'m:'+last.slice(0,7):ml.length?perKey(ml[0]):'all'}
+  else{const p=last?periodFor(D,last):null,pl=periodList(D);PER=p?p.start:pl.length?pl[0].start:'all'}}
+ const o=[...document.querySelectorAll('#app details')].map(d=>d.open);
+ Object.keys(TS).forEach(k=>delete TS[k]);calc();view();
+ document.querySelectorAll('#app details').forEach((d,i)=>d.open=!!o[i])};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-pmode]');if(b&&D)setPMode(b.dataset.pmode)});
+document.addEventListener('focusout',e=>{const t=e.target;if(isDateBox(t)&&t.dataset.typing){delete t.dataset.typing;applyPeriodInput(t)}});
 </script></body></html>
