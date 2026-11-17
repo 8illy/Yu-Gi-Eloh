@@ -30,7 +30,7 @@ const chg=(d,txt)=>d?` <small class=${d>0?'up':'dn'}>${txt}</small>`:'';
 const dRank=(id,i)=>{if(!PV)return'';const j=PV.list.findIndex(x=>x.id===id);return j<0?' <small class=up>new</small>':chg(j-i,(j>i?'▲':'▼')+Math.abs(j-i))};
 const dElo=p=>{if(!PV)return'';const q=PV.P[p.id];if(!q||!PV.list.includes(q))return'';const d=Math.round(p.elo-q.elo);return chg(d,(d>0?'+':'')+d)};
 const modeToggle=()=>`<span class=seg role=group aria-label="Format list">${[['periods','Format'],['months','Month']].map(([k,t])=>`<button type=button data-pmode=${k} aria-pressed=${PMODE===k}>${t}</button>`).join('')}</span>`;
-const sel=()=>`<div class="row selbar" style="justify-content:flex-end">${PER==='custom'?`<label class=dr>From <input type=date id=cs value="${CUS.start}" max="${CUS.end}"></label><label class=dr>to <input type=date id=ce value="${CUS.end}" min="${CUS.start}"></label>`:''}<label>Format <select id=per><option value=all${PER==='all'?' selected':''}>All time</option>${perList().map(p=>`<option value="${esc(perKey(p))}"${PER===perKey(p)?' selected':''}>${esc(periodLabel(p))}</option>`).join('')}<option value=custom${PER==='custom'?' selected':''}>Custom</option></select></label>${modeToggle()}</div>`;
+const sel=()=>`<div class="row selbar" style="justify-content:flex-end">${PER==='custom'?`<label class=dr>From <input type=date id=cs value="${CUS.start}" max="${CUS.end}"></label><label class=dr>to <input type=date id=ce value="${CUS.end}" min="${CUS.start}"></label>`:''}<label>Format <select id=per>${PMODE==='months'?'':`<option value=all${PER==='all'?' selected':''}>All time</option>`}${perList().map(p=>`<option value="${esc(perKey(p))}"${PER===perKey(p)?' selected':''}>${esc(periodLabel(p))}</option>`).join('')}${PMODE==='months'?'':`<option value=custom${PER==='custom'?' selected':''}>Custom</option>`}</select></label>${modeToggle()}</div>`;
 const av=u=>`<img class=av src="${esc(CFG.avatar(u.avatar))}" alt="" onerror="this.style.visibility='hidden'">`;
 const pl=id=>{const p=S.P[id];return p?(p.guest?`<span class=pl>${av(p)}<span class=nm>${esc(p.name)}</span></span>`:`<a class=pl href="#/player/${id}">${av(p)}<span class=nm>${esc(p.name)}</span></a>`):'?'};
 const plr=id=>{const p=S.P[id];return p?(p.guest?`<span class="pl pr"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</span>`:`<a class="pl pr" href="#/player/${id}"><span class=nm>${esc(p.name)}</span>${av(p).replace('class=av','class="av after"')}</a>`):'?'};
@@ -105,7 +105,7 @@ function view(){const[,pg,id]=location.hash.split('/');
  $('#app').innerHTML=(OFFLINE_SINCE?`<div class="card offline">You're offline. Showing the data last saved on this device${OFFLINE_SINCE>1?` (${fmtDate(new Date(OFFLINE_SINCE).toISOString().slice(0,10))})`:''}.</div>`:'')+(CONFIG_ERROR?`<div class="card err">${esc(CONFIG_ERROR)}</div>`:'')+(pg==='player'?player(id):pg==='event'?event(decodeURIComponent(id)):pg==='events'?events():pg==='winners'?winners():board());document.querySelectorAll('.dt').forEach(el=>dtDraw(el.dataset.t));scrollTo(0,0)}
 document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('dragstart',e=>e.preventDefault());
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-loadData().then(d=>{D=d;SA=derive(d);calcPT();try{PMODE=localStorage.getItem('yge.pmode')==='months'?'months':'periods'}catch{}const ps=perList();PER=ps.length?perKey(ps[0]):'all';calc();view()}).catch(e=>$('#app').textContent=navigator.onLine===false?"You're offline and this device has no saved copy of the data yet. Connect once, open the app, and it will work offline from then on.":'Could not load '+DATA_URL+' ('+e.message+'). If you are running the files locally, serve the folder over HTTP rather than opening the file directly.');
+loadData().then(d=>{D=d;SA=derive(d);calcPT();const ps=perList();PER=ps.length?perKey(ps[0]):'all';calc();view()}).catch(e=>$('#app').textContent=navigator.onLine===false?"You're offline and this device has no saved copy of the data yet. Connect once, open the app, and it will work offline from then on.":'Could not load '+DATA_URL+' ('+e.message+'). If you are running the files locally, serve the folder over HTTP rather than opening the file directly.');
 addEventListener('hashchange',()=>D&&view());
 // table controls (delegated): search box, column headers, paging, rows per page, mobile sort menu
 const dtOf=el=>{const w=el.closest&&el.closest('.dt');return w&&w.dataset.t};
@@ -132,8 +132,9 @@ document.addEventListener('keydown',e=>{const t=e.target;if(!isDateBox(t))return
  else if(e.key.length===1||['Backspace','Delete','ArrowUp','ArrowDown'].includes(e.key))t.dataset.typing=1});
 document.addEventListener('change',e=>{const t=e.target;if(!['per','cs','ce'].includes(t.id))return;if(isDateBox(t)&&t.dataset.typing)return;applyPeriodInput(t)});
 const setPMode=m=>{
- if(m===PMODE)return;PMODE=m;try{localStorage.setItem('yge.pmode',m)}catch{}
- if(PER!=='all'&&PER!=='custom'){   // keep roughly the same stretch of time: the month of the period's last event, or the period that month falls in
+ if(m===PMODE)return;PMODE=m;
+ if(m==='months'&&(PER==='all'||PER==='custom')){const ml=monthList();if(ml.length)PER=perKey(ml[0])}   // the month list has no All time / Custom, so land on the latest month
+ else if(PER!=='all'&&PER!=='custom'){   // keep roughly the same stretch of time: the month of the period's last event, or the period that month falls in
   const cur=perOf(PER),ds=cur?D.events.map(e=>e.date).filter(d=>inPeriod(cur,d)).sort():[],last=ds.at(-1);
   if(m==='months'){const ml=monthList();PER=last?'m:'+last.slice(0,7):ml.length?perKey(ml[0]):'all'}
   else{const p=last?periodFor(D,last):null,pl=periodList(D);PER=p?p.start:pl.length?pl[0].start:'all'}}
